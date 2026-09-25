@@ -1,5 +1,10 @@
 {
   "devDependencies": {
     "js-yaml": "^4.1.0"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^11.1.1",
+    "@simplewebauthn/server": "^14.0.2",
+    "web-push": "^3.6.7"
   }
 }
