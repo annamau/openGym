@@ -22,6 +22,7 @@ import Toast from './components/Toast.jsx'
 import SyncBanner from './components/SyncBanner.jsx'
 import RestTimer from './components/RestTimer.jsx'
 import TimerFlash from './components/TimerFlash.jsx'
+import SeasonalDecor from './components/SeasonalDecor.jsx'
 import Login from './views/Login.jsx'
 import MobileOnboarding from './views/MobileOnboarding.jsx'
 import Home from './views/Home.jsx'
@@ -45,16 +46,36 @@ const scrollPositions = new Map()
 bindUI(useUI)   // lets the shared controls open sheets without importing the store at module scope
 
 // theme === 'system' follows the OS/browser preference instead of a fixed choice.
-const resolveTheme = theme => theme === 'light' || theme === 'dark'
-  ? theme
-  : (window.matchMedia?.('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+const resolveTheme = theme => {
+  if (theme === 'system') {
+    return window.matchMedia?.('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
+  }
+  return theme || 'pink'
+}
 
 function applyPrefs(theme, accent) {
   const de = document.documentElement
-  de.dataset.theme = resolveTheme(theme)
-  de.dataset.accent = ACCENTS[accent] ? accent : 'lime'
+  const resolved = resolveTheme(theme)
+  de.dataset.theme = resolved
+  const defaultAccent = resolved === 'pink' ? 'pink'
+    : (resolved === 'sunset' ? 'coral'
+    : (resolved === 'halloween' ? 'pumpkin'
+    : (resolved === 'christmas' ? 'candy' : 'lime')))
+  de.dataset.accent = ACCENTS[accent] ? accent : defaultAccent
   const meta = document.querySelector('meta[name="theme-color"]')
-  if (meta) meta.content = de.dataset.theme === 'light' ? '#f2f2f7' : '#000000'
+  if (meta) {
+    const metaColors = {
+      light: '#f2f2f7',
+      dark: '#000000',
+      pink: '#522e38',
+      sunset: '#0b131b',
+      forest: '#0c1813',
+      cyber: '#0d131f',
+      halloween: '#110015',
+      christmas: '#061309',
+    }
+    meta.content = metaColors[resolved] || '#522e38'
+  }
 }
 
 function Shell() {
@@ -177,6 +198,7 @@ function Shell() {
       <Modals />
       <Toast />
       <TimerFlash />
+      <SeasonalDecor />
     </>
   )
 }

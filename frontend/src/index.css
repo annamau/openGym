@@ -17,8 +17,9 @@
    ========================================================================== */
 
 /* ---------------------------------------------------------------- tokens -- */
-:root {
-  /* surfaces — dark is the default */
+:root,
+:root[data-theme="pink"] {
+  /* surfaces — berry / rose pink from Sara's PR, our default */
   --bg:        #522e38;
   --bg-el:     #602437;   /* elevated backdrop (sheets, bars) */
   --surface:   #602437;   /* card / grouped-list fill */
@@ -41,8 +42,8 @@
   --yellow:#ffe0e9; --teal:#ffc2d4; --indigo:#8a2846; --pink:#ff7aa2;
   --purple:#602437; --mint:#ffc2d4; --brown:#8a2846; --grey:#b9375e;
 
-  /* accent (per-account, synced) */
-  --acc:  var(--green);
+  /* accent */
+  --acc:  #ff7aa2;
   --acc-2:#b9375e;
   --on-acc:#000000;
   --acc-soft: color-mix(in srgb, var(--acc) 16%, transparent);
@@ -61,34 +62,232 @@
   --sat:env(safe-area-inset-top,0px);
 }
 
-:root[data-theme="light"] {
-  --bg:        #ffe0e9;
-  --bg-el:     #ffc2d4;
-  --surface:   #ffe0e9;
-  --surface-2: #ff9ebb;
-  --surface-3: #ff7aa2;
+/* User Spectrum Theme: 10-color palette from coral to deep ocean */
+:root[data-theme="sunset"] {
+  --bg:        #0b131b;
+  --bg-el:     #111c26;
+  --surface:   #172635;
+  --surface-2: #1e3245;
+  --surface-3: #28425a;
 
-  --label:     #522e38;
-  --label-2:   rgba(82,46,56,.72);
-  --label-3:   rgba(82,46,56,.48);
-  --label-4:   rgba(82,46,56,.28);
+  --label:     #ffffff;
+  --label-2:   rgba(249,199,79,.92);
+  --label-3:   rgba(235,243,250,.60);
+  --label-4:   rgba(235,243,250,.32);
 
-  --sep:       rgba(138,40,70,.36);
-  --sep-op:    rgba(138,40,70,.24);
+  --sep:       rgba(67,170,139,.32);
+  --sep-op:    rgba(67,170,139,.18);
 
-  --acc-2:#b9375e;
+  --red:   #f94144;
+  --orange:#f3722c;
+  --yellow:#f9c74f;
+  --green: #90be6d;
+  --mint:  #43aa8b;
+  --teal:  #4d908e;
+  --blue:  #277da1;
+  --indigo:#577590;
+  --pink:  #f9844a;
+  --purple:#f8961e;
+  --brown: #577590;
+  --grey:  #4d908e;
+
+  --acc:  #f94144;
+  --acc-2:#f3722c;
+  --on-acc:#ffffff;
+  --acc-soft: color-mix(in srgb, var(--acc) 18%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 40%, transparent);
+}
+
+/* Classic Midnight OLED Dark */
+:root[data-theme="dark"] {
+  --bg:        #000000;
+  --bg-el:     #0e0e10;
+  --surface:   #1c1c1e;
+  --surface-2: #2c2c2e;
+  --surface-3: #3a3a3c;
+
+  --label:     #ffffff;
+  --label-2:   rgba(235,235,245,.60);
+  --label-3:   rgba(235,235,245,.32);
+  --label-4:   rgba(235,235,245,.18);
+
+  --sep:       rgba(84,84,88,.60);
+  --sep-op:    rgba(84,84,88,.34);
+
+  --blue:#0a84ff; --green:#30d158; --red:#ff453a; --orange:#ff9f0a;
+  --yellow:#ffd60a; --teal:#40c8e0; --indigo:#5e5ce6; --pink:#ff375f;
+  --purple:#bf5af2; --mint:#63e6e2; --brown:#ac8e68; --grey:#8e8e93;
+
+  --acc:  #30d158;
+  --acc-2:#248a3d;
   --on-acc:#000000;
+  --acc-soft: color-mix(in srgb, var(--acc) 16%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 38%, transparent);
+}
+
+/* Clean Daylight Light */
+:root[data-theme="light"] {
+  --bg:        #f2f2f7;
+  --bg-el:     #f7f7fa;
+  --surface:   #ffffff;
+  --surface-2: #ececef;
+  --surface-3: #e3e3e8;
+
+  --label:     #000000;
+  --label-2:   rgba(60,60,67,.60);
+  --label-3:   rgba(60,60,67,.30);
+  --label-4:   rgba(60,60,67,.16);
+
+  --sep:       rgba(60,60,67,.29);
+  --sep-op:    rgba(60,60,67,.20);
+
+  --blue:#007aff; --green:#34c759; --red:#ff3b30; --orange:#ff9500;
+  --yellow:#ffcc00; --teal:#30b0c7; --indigo:#5856d6; --pink:#ff2d55;
+  --purple:#af52de; --mint:#00c7be; --brown:#a2845e; --grey:#8e8e93;
+
+  --acc:  #007aff;
+  --acc-2:#0056b3;
+  --on-acc:#ffffff;
+  --acc-soft: color-mix(in srgb, var(--acc) 14%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 34%, transparent);
+}
+
+/* Emerald Forest */
+:root[data-theme="forest"] {
+  --bg:        #0c1813;
+  --bg-el:     #12241d;
+  --surface:   #182f26;
+  --surface-2: #223f34;
+  --surface-3: #2e5546;
+
+  --label:     #eafaf1;
+  --label-2:   rgba(234,250,241,.72);
+  --label-3:   rgba(234,250,241,.48);
+  --label-4:   rgba(234,250,241,.26);
+
+  --sep:       rgba(74,222,128,.28);
+  --sep-op:    rgba(74,222,128,.18);
+
+  --green: #34d399; --mint:#10b981; --teal:#14b8a6; --blue:#38bdf8;
+  --yellow:#facc15; --orange:#fb923c; --red:#f87171; --purple:#a78bfa;
+
+  --acc:  #34d399;
+  --acc-2:#059669;
+  --on-acc:#000000;
+  --acc-soft: color-mix(in srgb, var(--acc) 16%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 38%, transparent);
+}
+
+/* Cyber Slate */
+:root[data-theme="cyber"] {
+  --bg:        #0d131f;
+  --bg-el:     #141c2c;
+  --surface:   #1c273c;
+  --surface-2: #263652;
+  --surface-3: #34496d;
+
+  --label:     #f0f6fc;
+  --label-2:   rgba(240,246,252,.75);
+  --label-3:   rgba(240,246,252,.50);
+  --label-4:   rgba(240,246,252,.28);
+
+  --sep:       rgba(56,189,248,.28);
+  --sep-op:    rgba(56,189,248,.16);
+
+  --acc:  #38bdf8;
+  --acc-2:#0284c7;
+  --on-acc:#000000;
+  --acc-soft: color-mix(in srgb, var(--acc) 16%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 38%, transparent);
+}
+
+/* Halloween: ["#ffffff","#fff04c","#ffc545","#ff9b3e","#ff7037","#d15053","#a3306f","#75108b","#110015","#b8d14b"] */
+:root[data-theme="halloween"] {
+  --bg:        #110015;
+  --bg-el:     #1d0224;
+  --surface:   #270530;
+  --surface-2: #3d0c4b;
+  --surface-3: #561269;
+
+  --label:     #ffffff;
+  --label-2:   rgba(255,240,76,.85);
+  --label-3:   rgba(255,255,255,.50);
+  --label-4:   rgba(255,255,255,.28);
+
+  --sep:       rgba(117,16,139,.45);
+  --sep-op:    rgba(117,16,139,.25);
+
+  --orange:#ff7037;
+  --yellow:#fff04c;
+  --green: #b8d14b;
+  --mint:  #b8d14b;
+  --purple:#75108b;
+  --pink:  #a3306f;
+  --red:   #d15053;
+  --teal:  #a3306f;
+  --blue:  #75108b;
+
+  --acc:  #ff7037;
+  --acc-2:#d15053;
+  --on-acc:#000000;
+  --acc-soft: color-mix(in srgb, var(--acc) 18%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 40%, transparent);
+}
+
+/* Christmas: ["#5c0000","#751717","#ba0c0c","#ff0000","#ffebeb","#ecffeb","#27a300","#2a850e","#2d661b","#005c00"] */
+:root[data-theme="christmas"] {
+  --bg:        #061309;
+  --bg-el:     #0c1d11;
+  --surface:   #132b1a;
+  --surface-2: #1b3d26;
+  --surface-3: #265435;
+
+  --label:     #ffffff;
+  --label-2:   #ecffeb;
+  --label-3:   rgba(236,255,235,.65);
+  --label-4:   rgba(236,255,235,.35);
+
+  --sep:       rgba(255,0,0,.30);
+  --sep-op:    rgba(39,163,0,.25);
+
+  --red:   #ff0000;
+  --green: #27a300;
+  --mint:  #2a850e;
+  --teal:  #2d661b;
+  --blue:  #005c00;
+  --purple:#751717;
+  --orange:#ba0c0c;
+  --yellow:#ffd700;
+  --pink:  #ffebeb;
+  --brown: #5c0000;
+  --grey:  #2a850e;
+
+  --acc:  #ff0000;
+  --acc-2:#ba0c0c;
+  --on-acc:#ffffff;
+  --acc-soft: color-mix(in srgb, var(--acc) 20%, transparent);
+  --acc-line: color-mix(in srgb, var(--acc) 45%, transparent);
 }
 
 /* accents */
-:root[data-accent="lime"]  { --acc:var(--green);  --acc-2:#b9375e; --on-acc:#000 }
-:root[data-accent="sky"]   { --acc:var(--blue);   --acc-2:#ff7aa2; --on-acc:#000 }
-:root[data-accent="orange"]{ --acc:var(--orange); --acc-2:#e05780; --on-acc:#000 }
-:root[data-accent="violet"]{ --acc:var(--purple); --acc-2:#8a2846; --on-acc:#fff }
-:root[data-accent="pink"]  { --acc:var(--pink);   --acc-2:#e05780; --on-acc:#000 }
-:root[data-accent="red"]   { --acc:var(--red);    --acc-2:#602437; --on-acc:#fff }
-:root[data-accent="teal"]  { --acc:var(--teal);   --acc-2:#ff9ebb; --on-acc:#000 }
-:root[data-accent="gold"]  { --acc:var(--yellow); --acc-2:#ffc2d4; --on-acc:#000 }
+:root[data-accent="lime"]    { --acc:#30d158; --acc-2:#248a3d; --on-acc:#000 }
+:root[data-accent="sky"]     { --acc:#0a84ff; --acc-2:#0060df; --on-acc:#fff }
+:root[data-accent="orange"]  { --acc:#f8961e; --acc-2:#c76b00; --on-acc:#000 }
+:root[data-accent="amber"]   { --acc:#f9c74f; --acc-2:#c49216; --on-acc:#000 }
+:root[data-accent="coral"]   { --acc:#f94144; --acc-2:#c7292c; --on-acc:#fff }
+:root[data-accent="violet"]  { --acc:#bf5af2; --acc-2:#8944ab; --on-acc:#fff }
+:root[data-accent="pink"]    { --acc:#ff7aa2; --acc-2:#b9375e; --on-acc:#000 }
+:root[data-accent="rose"]    { --acc:#ff9ebb; --acc-2:#b9375e; --on-acc:#000 }
+:root[data-accent="red"]     { --acc:#ff453a; --acc-2:#d70015; --on-acc:#fff }
+:root[data-accent="sage"]    { --acc:#90be6d; --acc-2:#659242; --on-acc:#000 }
+:root[data-accent="mint"]    { --acc:#43aa8b; --acc-2:#2c7761; --on-acc:#fff }
+:root[data-accent="teal"]    { --acc:#4d908e; --acc-2:#306563; --on-acc:#fff }
+:root[data-accent="ocean"]   { --acc:#277da1; --acc-2:#185c79; --on-acc:#fff }
+:root[data-accent="gold"]    { --acc:#ffd60a; --acc-2:#b25000; --on-acc:#000 }
+:root[data-accent="pumpkin"] { --acc:#ff7037; --acc-2:#d15053; --on-acc:#000 }
+:root[data-accent="slime"]   { --acc:#b8d14b; --acc-2:#8ea432; --on-acc:#000 }
+:root[data-accent="candy"]   { --acc:#ff0000; --acc-2:#ba0c0c; --on-acc:#fff }
+:root[data-accent="pine"]    { --acc:#27a300; --acc-2:#1c7300; --on-acc:#fff }
 
 /* ---------------------------------------------------------------- reset -- */
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
@@ -1285,6 +1484,149 @@ body.chips-dragging *{cursor:inherit}
 .cal-legend{display:flex;gap:14px;justify-content:center;margin-top:12px;font-size:12px;color:var(--label-3)}
 .cal-legend i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:5px}
 
+/* --- theme picker --- */
+.theme-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(140px,1fr));
+  gap:10px;
+  padding:10px 14px 14px;
+}
+.theme-card{
+  position:relative;
+  display:flex;
+  flex-direction:column;
+  background:var(--surface-2);
+  border:1.5px solid transparent;
+  border-radius:var(--r-card);
+  padding:8px;
+  cursor:pointer;
+  text-align:left;
+  transition:transform var(--fast) var(--ease),border-color var(--fast),box-shadow var(--fast);
+  overflow:hidden;
+}
+.theme-card:hover{
+  border-color:var(--sep);
+}
+.theme-card:active{
+  transform:scale(.97);
+}
+.theme-card.on{
+  border-color:var(--acc);
+  box-shadow:0 0 0 1.5px var(--acc),0 6px 16px -4px color-mix(in srgb,var(--acc) 36%,transparent);
+}
+.theme-card-preview{
+  height:58px;
+  border-radius:var(--r-sm);
+  position:relative;
+  overflow:hidden;
+  display:flex;
+  flex-direction:column;
+  border:1px solid rgba(255,255,255,.08);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.05);
+  margin-bottom:8px;
+}
+.theme-card-preview-bar{
+  height:12px;
+  width:100%;
+  display:flex;
+  align-items:center;
+  padding:0 6px;
+  gap:4px;
+  opacity:.8;
+}
+.theme-card-preview-body{
+  flex:1;
+  padding:4px 6px;
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+.theme-card-preview-surface{
+  height:15px;
+  border-radius:4px;
+  display:flex;
+  align-items:center;
+  padding:0 6px;
+  gap:4px;
+}
+.theme-card-preview-line{
+  height:3px;
+  border-radius:2px;
+  background:currentColor;
+  opacity:.5;
+}
+.theme-card-preview-pill{
+  width:14px;
+  height:6px;
+  border-radius:99px;
+  margin-left:auto;
+}
+.theme-card-spectrum{
+  height:7px;
+  border-radius:4px;
+  margin-top:auto;
+  width:100%;
+}
+.theme-card-info{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+}
+.theme-card-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:4px;
+}
+.theme-card-title{
+  font-size:13px;
+  font-weight:600;
+  color:var(--label);
+  letter-spacing:-.01em;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.theme-card-badge{
+  font-size:9px;
+  font-weight:700;
+  padding:1px 5px;
+  border-radius:6px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  background:var(--surface-3);
+  color:var(--label-2);
+  flex:none;
+}
+.theme-card.on .theme-card-badge{
+  background:var(--acc-soft);
+  color:var(--acc);
+}
+.theme-card-desc{
+  font-size:11px;
+  color:var(--label-3);
+  line-height:1.25;
+  display:-webkit-box;
+  -webkit-line-clamp:2;
+  -webkit-box-orient:vertical;
+  overflow:hidden;
+}
+.theme-card-check{
+  position:absolute;
+  top:6px;
+  right:6px;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:var(--acc);
+  color:var(--on-acc);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:11px;
+  box-shadow:0 2px 6px rgba(0,0,0,.3);
+}
+
 /* --- accent swatches --- */
 .swatches{display:flex;gap:12px;flex-wrap:wrap}
 .swatch{width:32px;height:32px;border-radius:50%;flex:none;position:relative;transition:transform var(--fast)}
@@ -1472,3 +1814,285 @@ body.chips-dragging *{cursor:inherit}
 .coach-cta-t b{font-size:17px;font-weight:600;letter-spacing:-.015em;color:var(--label)}
 .coach-cta-t span{font-size:13px;color:var(--label-2);line-height:1.35}
 .coach-cta-chev{color:var(--acc);font-size:15px;flex:none}
+
+/* ------------------------------------------------ seasonal decor overlays -- */
+.seasonal-overlay{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:90;
+  overflow:hidden;
+}
+
+/* seasonal header decor in the centered container */
+.settings-hdr-seasonal{
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.hdr-seasonal-tag{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  vertical-align:middle;
+}
+.hdr-seasonal-tag.pumpkin{
+  color:#ff7037;
+  filter:drop-shadow(0 0 8px rgba(255,112,55,.65));
+  animation:pumpkinPulse 3s ease-in-out infinite alternate;
+}
+.hdr-seasonal-tag.tree{
+  color:#27a300;
+  filter:drop-shadow(0 0 8px rgba(39,163,0,.6));
+}
+.hdr-seasonal-cluster{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-left:auto;
+  padding-right:4px;
+}
+.hdr-seasonal-cluster.halloween .hdr-decor-web{
+  color:#ff9b3e;
+  opacity:.88;
+  filter:drop-shadow(0 2px 8px rgba(255,155,62,.4));
+  transform:rotate(-5deg);
+}
+.hdr-seasonal-cluster.halloween .hdr-decor-ghost{
+  color:#ffffff;
+  opacity:.92;
+  filter:drop-shadow(0 0 8px rgba(184,209,75,.7));
+  animation:ghostBob 3.5s ease-in-out infinite alternate;
+}
+.hdr-seasonal-cluster.halloween .hdr-decor-bat{
+  color:#ff7037;
+  opacity:.9;
+  filter:drop-shadow(0 2px 6px rgba(0,0,0,.6));
+  animation:batFlutter 4s ease-in-out infinite alternate;
+}
+.hdr-seasonal-cluster.christmas .hdr-decor-cane{
+  color:#ff0000;
+  filter:drop-shadow(0 0 6px rgba(255,0,0,.5));
+  transform:rotate(-12deg);
+}
+.hdr-seasonal-cluster.christmas .hdr-decor-snow{
+  color:#ecffeb;
+  filter:drop-shadow(0 0 6px rgba(255,255,255,.6));
+  animation:snowRotate 8s linear infinite;
+}
+.hdr-seasonal-cluster.christmas .hdr-decor-tree{
+  color:#27a300;
+  filter:drop-shadow(0 0 6px rgba(39,163,0,.5));
+  transform:rotate(8deg);
+}
+@keyframes snowRotate{
+  from{transform:rotate(0deg)}
+  to{transform:rotate(360deg)}
+}
+@keyframes ghostBob{
+  0%{transform:translateY(0) rotate(0deg)}
+  50%{transform:translateY(-5px) rotate(4deg)}
+  100%{transform:translateY(2px) rotate(-3deg)}
+}
+@keyframes pumpkinPulse{
+  0%{transform:scale(1)}
+  100%{transform:scale(1.08)}
+}
+@keyframes batFlutter{
+  0%{transform:translate(0, 0) rotate(0deg) scale(1)}
+  50%{transform:translate(-6px, 4px) rotate(-6deg) scale(1.06)}
+  100%{transform:translate(6px, -4px) rotate(5deg) scale(0.96)}
+}
+
+/* seasonal settings banner */
+.seasonal-settings-banner{
+  margin:10px 14px 12px;
+  padding:12px 14px;
+  border-radius:var(--r-card);
+  display:flex;
+  align-items:center;
+  gap:12px;
+  position:relative;
+  overflow:hidden;
+  animation:bannerFadeIn 0.3s ease-out;
+}
+@keyframes bannerFadeIn{
+  from{opacity:0;transform:translateY(-6px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.seasonal-settings-banner.halloween-banner{
+  background:linear-gradient(135deg,rgba(39,5,48,.95),rgba(61,12,75,.85));
+  border:1.5px solid rgba(255,112,55,.45);
+  box-shadow:0 4px 16px -2px rgba(255,112,55,.25);
+}
+.seasonal-settings-banner.christmas-banner{
+  background:linear-gradient(135deg,rgba(19,43,26,.95),rgba(27,61,38,.85));
+  border:1.5px solid rgba(255,0,0,.4);
+  box-shadow:0 4px 16px -2px rgba(255,0,0,.25);
+}
+.seasonal-banner-icons{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  flex:none;
+}
+.banner-icon-badge{
+  width:36px;
+  height:36px;
+  border-radius:10px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  transition:transform var(--fast);
+}
+.banner-icon-badge.web{
+  background:rgba(255,155,62,.18);
+  color:#ff9b3e;
+}
+.banner-icon-badge.bat{
+  background:rgba(255,112,55,.18);
+  color:#ff7037;
+}
+.banner-icon-badge.pumpkin{
+  background:rgba(255,112,55,.25);
+  color:#ff7037;
+  filter:drop-shadow(0 0 6px rgba(255,112,55,.5));
+}
+.banner-icon-badge.ghost{
+  background:rgba(184,209,75,.2);
+  color:#ffffff;
+  filter:drop-shadow(0 0 6px rgba(184,209,75,.6));
+}
+.banner-icon-badge.tree{
+  background:rgba(39,163,0,.2);
+  color:#27a300;
+  filter:drop-shadow(0 0 6px rgba(39,163,0,.5));
+}
+.banner-icon-badge.snowflake{
+  background:rgba(236,255,235,.2);
+  color:#ecffeb;
+}
+.banner-icon-badge.cane{
+  background:rgba(255,0,0,.2);
+  color:#ff0000;
+  filter:drop-shadow(0 0 6px rgba(255,0,0,.5));
+}
+.banner-icon-badge.gift{
+  background:rgba(255,215,0,.2);
+  color:#ffd700;
+}
+.seasonal-banner-text{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-width:0;
+}
+.seasonal-banner-title{
+  font-size:14px;
+  font-weight:600;
+  color:var(--label);
+  letter-spacing:-.01em;
+}
+.seasonal-banner-sub{
+  font-size:12px;
+  color:var(--label-2);
+  line-height:1.25;
+}
+
+/* christmas snowfall centered over content */
+.christmas-overlay{
+  position:fixed;
+  inset:0;
+  max-width:600px;
+  margin:0 auto;
+  left:0;
+  right:0;
+  pointer-events:none;
+  z-index:90;
+  overflow:hidden;
+}
+.snow-flake{
+  position:fixed;
+  top:-20px;
+  border-radius:50%;
+  background:#ffffff;
+  pointer-events:none;
+  box-shadow:0 0 6px rgba(255,255,255,.8);
+  animation-name:snowFall;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+}
+.snow-icon{
+  position:fixed;
+  top:-30px;
+  color:#ecffeb;
+  pointer-events:none;
+  filter:drop-shadow(0 0 5px rgba(255,255,255,.7));
+  animation-name:snowIconFall;
+  animation-timing-function:linear;
+  animation-iteration-count:infinite;
+}
+@keyframes snowFall{
+  0%{
+    transform:translateY(0) translateX(0);
+    opacity:0;
+  }
+  10%{
+    opacity:1;
+  }
+  90%{
+    opacity:.85;
+  }
+  100%{
+    transform:translateY(105vh) translateX(25px);
+    opacity:0;
+  }
+}
+@keyframes snowIconFall{
+  0%{
+    transform:translateY(0) translateX(0) rotate(0deg);
+    opacity:0;
+  }
+  10%{
+    opacity:.9;
+  }
+  85%{
+    opacity:.8;
+  }
+  100%{
+    transform:translateY(105vh) translateX(35px) rotate(220deg);
+    opacity:0;
+  }
+}
+
+/* seasonal & theme card enhancements */
+:root[data-theme="christmas"] .card,
+:root[data-theme="christmas"] .sect-b{
+  border:1px solid rgba(39,163,0,.22);
+}
+:root[data-theme="sunset"] .card,
+:root[data-theme="sunset"] .sect-b{
+  border:1px solid rgba(67,170,139,.20);
+}
+:root[data-theme="halloween"] .card,
+:root[data-theme="halloween"] .sect-b{
+  border:1px solid rgba(117,16,139,.30);
+}
+
+/* themed tabbar start buttons */
+:root[data-theme="sunset"] #tabbar button.start .cir{
+  background:linear-gradient(135deg,#f94144,#f8961e);
+  color:#ffffff;
+  box-shadow:0 6px 20px -3px rgba(249,65,68,.65);
+}
+:root[data-theme="halloween"] #tabbar button.start .cir{
+  background:linear-gradient(135deg,#ff9b3e,#ff7037);
+  color:#110015;
+  box-shadow:0 6px 20px -3px rgba(255,112,55,.65);
+}
+:root[data-theme="christmas"] #tabbar button.start .cir{
+  background:linear-gradient(135deg,#ff0000,#ba0c0c);
+  color:#ffffff;
+  box-shadow:0 6px 20px -3px rgba(255,0,0,.65);
+  border:1.5px solid rgba(236,255,235,.4);
+}

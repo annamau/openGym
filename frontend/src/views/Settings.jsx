@@ -20,6 +20,107 @@ import { starterPlanSheet, confirmSheet, importFromApp, importFromHevy, equipmen
 import Icon from '../components/Icon.jsx'
 import { Section, Row, SelectRow, Switch, Segmented, Button, TextField } from '../components/ui.jsx'
 
+const THEMES = [
+  {
+    id: 'pink',
+    name: 'Bichi Pink',
+    badge: 'Default',
+    desc: 'Signature berry & rose',
+    bg: '#522e38',
+    surface: '#602437',
+    label: '#ffe0e9',
+    accent: '#ff7aa2',
+    accentDefault: 'pink',
+  },
+  {
+    id: 'sunset',
+    name: 'Bichi A',
+    badge: 'Mine',
+    desc: '10-color coral to ocean',
+    bg: '#0b131b',
+    surface: '#172635',
+    label: '#ffffff',
+    accent: '#f94144',
+    accentDefault: 'coral',
+    spectrum: ['#f94144', '#f3722c', '#f8961e', '#f9844a', '#f9c74f', '#90be6d', '#43aa8b', '#4d908e', '#577590', '#277da1'],
+  },
+  {
+    id: 'halloween',
+    name: 'Halloween',
+    badge: 'Spooky',
+    desc: 'Pumpkin orange & witch purple',
+    bg: '#110015',
+    surface: '#270530',
+    label: '#ffffff',
+    accent: '#ff7037',
+    accentDefault: 'pumpkin',
+    spectrum: ['#ffffff', '#fff04c', '#ffc545', '#ff9b3e', '#ff7037', '#d15053', '#a3306f', '#75108b', '#110015', '#b8d14b'],
+  },
+  {
+    id: 'christmas',
+    name: 'Christmas',
+    badge: 'Holiday',
+    desc: 'Festive evergreen & candy red',
+    bg: '#061309',
+    surface: '#132b1a',
+    label: '#ffffff',
+    accent: '#ff0000',
+    accentDefault: 'candy',
+    spectrum: ['#5c0000', '#751717', '#ba0c0c', '#ff0000', '#ffebeb', '#ecffeb', '#27a300', '#2a850e', '#2d661b', '#005c00'],
+  },
+  {
+    id: 'dark',
+    name: 'Midnight OLED',
+    badge: 'Dark',
+    desc: 'Pure black & contrast',
+    bg: '#000000',
+    surface: '#1c1c1e',
+    label: '#ffffff',
+    accent: '#30d158',
+    accentDefault: 'lime',
+  },
+  {
+    id: 'light',
+    name: 'Clean Daylight',
+    badge: 'Light',
+    desc: 'Crisp high-contrast day',
+    bg: '#f2f2f7',
+    surface: '#ffffff',
+    label: '#000000',
+    accent: '#007aff',
+    accentDefault: 'sky',
+  },
+  {
+    id: 'forest',
+    name: 'Emerald Forest',
+    badge: 'Forest',
+    desc: 'Deep jungle & fresh mint',
+    bg: '#0c1813',
+    surface: '#182f26',
+    label: '#eafaf1',
+    accent: '#34d399',
+    accentDefault: 'mint',
+  },
+  {
+    id: 'cyber',
+    name: 'Cyber Slate',
+    badge: 'Cyber',
+    desc: 'Deep slate & neon cyan',
+    bg: '#0d131f',
+    surface: '#1c273c',
+    label: '#f0f6fc',
+    accent: '#38bdf8',
+    accentDefault: 'sky',
+  },
+  {
+    id: 'system',
+    name: 'System Auto',
+    badge: 'Auto',
+    desc: 'Matches device preference',
+    isSystem: true,
+  },
+]
+
 export default function Settings() {
   const nav = useNavigate()
   const S = useStore(s => s.S)
@@ -180,16 +281,49 @@ export default function Settings() {
     },
   })
 
+  const isHalloween = S.theme === 'halloween'
+  const isChristmas = S.theme === 'christmas'
+
   return <div className="narrow">
-    <div className="hdr">
-      <button className="iconbtn" onClick={() => nav('/home')} aria-label={t('Home')}><Icon name="chevronLeft" /></button>
-      <div style={{ flex: 1, marginLeft: 10 }}><h1>{t('Settings')}</h1></div>
+    <div className="hdr settings-hdr-seasonal">
+      <button className="iconbtn" onClick={() => nav('/home')} aria-label={t('Home')}>
+        <Icon name={isHalloween ? 'bat' : isChristmas ? 'candyCane' : 'chevronLeft'} />
+      </button>
+      <div style={{ flex: 1, marginLeft: 10, display: 'flex', alignItems: 'center', gap: 8 }}>
+        <h1>{t('Settings')}</h1>
+        {isHalloween && (
+          <span className="hdr-seasonal-tag pumpkin" title="Halloween Active">
+            <Icon name="pumpkin" size={22} />
+          </span>
+        )}
+        {isChristmas && (
+          <span className="hdr-seasonal-tag tree" title="Christmas Active">
+            <Icon name="tree" size={22} />
+          </span>
+        )}
+      </div>
+
+      {isHalloween && (
+        <div className="hdr-seasonal-cluster halloween">
+          <span className="hdr-decor-bat"><Icon name="bat" size={22} /></span>
+          <span className="hdr-decor-ghost"><Icon name="ghost" size={24} /></span>
+          <span className="hdr-decor-web"><Icon name="spiderweb" size={42} /></span>
+        </div>
+      )}
+
+      {isChristmas && (
+        <div className="hdr-seasonal-cluster christmas">
+          <span className="hdr-decor-cane"><Icon name="candyCane" size={24} /></span>
+          <span className="hdr-decor-snow"><Icon name="snowflake" size={22} /></span>
+          <span className="hdr-decor-tree"><Icon name="tree" size={24} /></span>
+        </div>
+      )}
     </div>
 
     {/* ---------- account (demo and mobile builds have nothing to sign in to) ---------- */}
     <Section title={MOBILE ? (user ? t('Your server') : t('Your data')) : DEMO ? t('Demo') : t('Account')}>
       {MOBILE ? (user ? <>
-        <Row icon="personCircle" iconTint="var(--grey)" title={user.name} subtitle={t('Synced with your openGym server.')} />
+        <Row icon={isHalloween ? 'ghost' : isChristmas ? 'gift' : 'personCircle'} iconTint="var(--grey)" title={user.name} subtitle={t('Synced with your openGym server.')} />
         {user.admin && <Row icon="wrench" iconTint="var(--indigo)" title={t('Admin dashboard')} accessory="chevron" onClick={() => nav('/admin')} />}
         <Row icon="signOut" iconTint="var(--red)" title={t('Disconnect')} danger onClick={() => confirmSheet({
           title: t('Disconnect from your server?'),
@@ -202,21 +336,21 @@ export default function Settings() {
         <Row icon="link" iconTint="var(--indigo)" title={t('Connect to my server')} subtitle={t('Sync this device to your own self-hosted openGym instead.')} accessory="chevron"
           onClick={() => useUI.getState().openSheet(close => <ConnectSheet close={close} />)} />
       </>) : DEMO ? <>
-        <Row icon="sparkles" iconTint="var(--acc)" title={t('You’re in the demo')} subtitle={t('Example data, stored only in this browser — change anything you like.')} />
-        <Row icon="reset" iconTint="var(--blue)" title={t('Reset demo data')} accessory="chevron"
+        <Row icon={isHalloween ? 'pumpkin' : isChristmas ? 'gift' : 'sparkles'} iconTint="var(--acc)" title={t('You’re in the demo')} subtitle={t('Example data, stored only in this browser — change anything you like.')} />
+        <Row icon={isHalloween ? 'spiderweb' : isChristmas ? 'snowflake' : 'reset'} iconTint="var(--blue)" title={t('Reset demo data')} accessory="chevron"
           onClick={() => confirmSheet({ title: t('Reset demo data?'), message: t('Puts the example plan, workouts and weigh-ins back the way they started.'), confirmText: t('Reset'), onConfirm: () => { resetDemo(); nav('/home'); toast(t('Demo data reset')) } })} />
         <Row icon="rocket" iconTint="var(--indigo)" title={t('Self-host openGym')} subtitle={t('Passkey sign-in, sync across your devices, your own data.')} accessory="chevron"
           onClick={() => window.open(REPO, '_blank', 'noopener')} />
       </> : user ? <>
-        <Row icon="personCircle" iconTint="var(--grey)" title={user.name} subtitle={t('Signed in with passkey — data syncs to this profile.')} />
+        <Row icon={isHalloween ? 'ghost' : isChristmas ? 'gift' : 'personCircle'} iconTint="var(--grey)" title={user.name} subtitle={t('Signed in with passkey — data syncs to this profile.')} />
         {user.admin && <Row icon="wrench" iconTint="var(--indigo)" title={t('Admin dashboard')} accessory="chevron" onClick={() => nav('/admin')} />}
         <Row icon="link" iconTint="var(--blue)" title={t('Pair the mobile app')} subtitle={t('Connect the openGym app on your phone to this account.')} accessory="chevron"
           onClick={() => useUI.getState().openSheet(close => <PairSheet close={close} />)} />
-        <Row icon="signOut" iconTint="var(--red)" title={t('Sign out')} danger onClick={() => confirmSheet({ title: t('Sign out?'), message: t('Your data is synced to your profile first, then cleared from this device.'), confirmText: t('Sign out'), danger: true, onConfirm: () => { signOut(); nav('/home') } })} />
+        <Row icon={isHalloween ? 'bat' : isChristmas ? 'snowflake' : 'signOut'} iconTint="var(--red)" title={t('Sign out')} danger onClick={() => confirmSheet({ title: t('Sign out?'), message: t('Your data is synced to your profile first, then cleared from this device.'), confirmText: t('Sign out'), danger: true, onConfirm: () => { signOut(); nav('/home') } })} />
         <Row icon="shield" iconTint="var(--red)" title={t('Sign out everywhere')} subtitle={t('Ends this profile’s sessions on all your devices.')} danger onClick={signOutEverywhere} />
       </> : webauthnOK() ? <>
-        <Row icon="sparkles" iconTint="var(--acc)" title={t('Create passkey profile')} subtitle={t('Keeps your data safe and separate per person.')} accessory="chevron" onClick={registerHere} />
-        <Row icon="person" iconTint="var(--blue)" title={t('Sign in with passkey')} accessory="chevron" onClick={signInHere} />
+        <Row icon={isHalloween ? 'ghost' : isChristmas ? 'gift' : 'sparkles'} iconTint={isHalloween ? 'var(--orange)' : isChristmas ? 'var(--red)' : 'var(--acc)'} title={t('Create passkey profile')} subtitle={t('Keeps your data safe and separate per person.')} accessory="chevron" onClick={registerHere} />
+        <Row icon={isHalloween ? 'pumpkin' : isChristmas ? 'tree' : 'person'} iconTint="var(--blue)" title={t('Sign in with passkey')} accessory="chevron" onClick={signInHere} />
       </> : (
         <Row icon="lock" iconTint="var(--grey)" title={t('Passkeys not supported in this browser.')} />
       )}
@@ -290,17 +424,17 @@ export default function Settings() {
       <Row icon="wrench" iconTint="var(--purple)" title={t('Workout controls')} accessory="chevron"
         subtitle={t('Everything hidden here stays one tap away: the ⋯ button of an exercise and the number of a set.')}
         onClick={() => workoutControlsSheet()} />
-      <SelectRow icon="timer" iconTint="var(--orange)" title={t('Rest timer')}
+      <SelectRow icon={isHalloween ? 'spiderweb' : isChristmas ? 'snowflake' : 'timer'} iconTint="var(--orange)" title={t('Rest timer')}
         value={S.restSec} onChange={v => update(s => { s.restSec = v })}
         options={[{ value: 0, label: t('Off') }, ...[60, 90, 120, 150, 180].map(v => ({ value: v, label: v + 's' }))]} />
       {/* Default for a rest-pause burst added live on a plain set — a planned exercise's own
           "Rest (s)" (in its Intensifier config) overrides this, same as the main rest timer
           is the fallback whenever an exercise has no progression rule of its own. */}
-      <SelectRow icon="bolt" iconTint="var(--acc)" title={t('Rest-pause rest')}
+      <SelectRow icon={isHalloween ? 'bat' : isChristmas ? 'candyCane' : 'bolt'} iconTint="var(--acc)" title={t('Rest-pause rest')}
         value={S.restPauseSec} onChange={v => update(s => { s.restPauseSec = v })}
         options={[10, 15, 20, 30].map(v => ({ value: v, label: v + 's' }))} />
       {(wakeOK || !MOBILE) && (
-        <Row icon="sun" iconTint="var(--yellow)" title={t('Keep screen awake')}
+        <Row icon={isHalloween ? 'pumpkin' : isChristmas ? 'tree' : 'sun'} iconTint={isHalloween ? 'var(--orange)' : isChristmas ? 'var(--green)' : 'var(--yellow)'} title={t('Keep screen awake')}
           subtitle={wakeOK ? null : t('Not supported in this browser.')}>
           <Switch checked={wakeOK && S.keepAwake !== false} disabled={!wakeOK}
             onChange={v => update(s => { s.keepAwake = v })} />
@@ -315,7 +449,7 @@ export default function Settings() {
           value={S.gifSize === 'mini' || S.gifSize === 'off' ? S.gifSize : 'full'}
           onChange={v => update(s => { s.gifSize = v })} />
       </Row>
-      <Row icon="bell" iconTint="var(--pink)" title={t('Sounds')}>
+      <Row icon={isHalloween ? 'bat' : isChristmas ? 'candyCane' : 'bell'} iconTint={isHalloween ? 'var(--purple)' : isChristmas ? 'var(--red)' : 'var(--pink)'} title={t('Sounds')}>
         {/* Turning Sounds on is a tap: unlock the audio context now so a timer that ends before
             the next set check can already sound (iOS, #152). */}
         <Switch checked={!!S.sound} onChange={v => { if (v) unlock(true); update(s => { s.sound = v }) }} />
@@ -324,12 +458,12 @@ export default function Settings() {
           the timer. On, the phone treats the timer like a music player — exclusive, and the
           music app is not told it may resume — so it is a choice, off by default (lib/sound.js). */}
       {S.sound && playOnSilentSupported() && (
-        <Row icon="bell" iconTint="var(--orange)" title={t('Play sounds when the phone is on silent')}
+        <Row icon={isHalloween ? 'bat' : isChristmas ? 'candyCane' : 'bell'} iconTint={isHalloween ? 'var(--orange)' : isChristmas ? 'var(--green)' : 'var(--orange)'} title={t('Play sounds when the phone is on silent')}
           subtitle={t('Music playing on this phone stops during a workout and does not resume by itself.')}>
           <Switch checked={!!S.soundOnSilent} onChange={v => update(s => { s.soundOnSilent = v })} />
         </Row>
       )}
-      <Row icon="sun" iconTint="var(--yellow)" title={t('Flash screen when timer ends')}>
+      <Row icon={isHalloween ? 'ghost' : isChristmas ? 'snowflake' : 'sun'} iconTint={isHalloween ? 'var(--yellow)' : isChristmas ? 'var(--mint)' : 'var(--yellow)'} title={t('Flash screen when timer ends')}>
         <Switch checked={!!S.timerFlash} onChange={v => update(s => { s.timerFlash = v })} />
       </Row>
       {/* Two names for the same judgement, so the column asks in the scale you already think in.
@@ -349,18 +483,180 @@ export default function Settings() {
 
     {/* ---------- appearance ---------- */}
     <Section title={t('Appearance')} footer={DEMO || MOBILE ? undefined : t('synced with your profile')}>
-      <Row icon="moon" iconTint="var(--indigo)" title={t('Theme')}>
-        <Segmented
-          className="seg-inline"
-          options={[
-            { value: 'dark', icon: 'moon', label: t('Dark') },
-            { value: 'light', icon: 'sun', label: t('Light') },
-            { value: 'system', icon: 'gear', label: t('System') },
-          ]}
-          value={S.theme || 'dark'}
-          onChange={v => update(s => { s.theme = v })}
-        />
-      </Row>
+      <div style={{ padding: '14px 16px 4px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <span className="t-head" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Icon name={isHalloween ? 'pumpkin' : isChristmas ? 'tree' : 'moon'} style={{ color: isHalloween ? 'var(--orange)' : isChristmas ? 'var(--green)' : 'var(--indigo)', fontSize: 18 }} />
+            {t('Theme')}
+          </span>
+          <span className="t-sub muted capitalize">{(THEMES.find(th => th.id === (S.theme || 'pink')) || {}).name || t('Custom')}</span>
+        </div>
+      </div>
+      {S.theme === 'halloween' && (
+        <div className="seasonal-settings-banner halloween-banner">
+          <div className="seasonal-banner-icons">
+            <span className="banner-icon-badge web"><Icon name="spiderweb" size={24} /></span>
+            <span className="banner-icon-badge bat"><Icon name="bat" size={24} /></span>
+            <span className="banner-icon-badge pumpkin"><Icon name="pumpkin" size={28} /></span>
+            <span className="banner-icon-badge ghost"><Icon name="ghost" size={26} /></span>
+          </div>
+          <div className="seasonal-banner-text">
+            <span className="seasonal-banner-title">{t('Halloween Spooky Mode')}</span>
+            <span className="seasonal-banner-sub">{t('Jack-o’-lantern orange, witch purple & floating ghosts')}</span>
+          </div>
+        </div>
+      )}
+      {S.theme === 'christmas' && (
+        <div className="seasonal-settings-banner christmas-banner">
+          <div className="seasonal-banner-icons">
+            <span className="banner-icon-badge tree"><Icon name="tree" size={26} /></span>
+            <span className="banner-icon-badge snowflake"><Icon name="snowflake" size={24} /></span>
+            <span className="banner-icon-badge cane"><Icon name="candyCane" size={26} /></span>
+            <span className="banner-icon-badge gift"><Icon name="gift" size={24} /></span>
+          </div>
+          <div className="seasonal-banner-text">
+            <span className="seasonal-banner-title">{t('Christmas Holiday Mode')}</span>
+            <span className="seasonal-banner-sub">{t('Evergreen pine, candy cane red & snowfall')}</span>
+          </div>
+        </div>
+      )}
+      <div className="theme-grid">
+        {THEMES.map(th => {
+          const isSel = (S.theme || 'pink') === th.id
+          return (
+            <button
+              key={th.id}
+              type="button"
+              className={'theme-card' + (isSel ? ' on' : '')}
+              onClick={() => {
+                update(s => {
+                  s.theme = th.id
+                  s._themeSet = true
+                  if (th.accentDefault) {
+                    s.accent = th.accentDefault
+                  }
+                })
+              }}
+              aria-label={th.name}
+            >
+              {th.isSystem ? (
+                <div className="theme-card-preview" style={{ background: '#1c1c1e' }}>
+                  <div style={{
+                    position: 'absolute',
+                    inset: 0,
+                    background: 'linear-gradient(135deg, #000000 50%, #f2f2f7 50%)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}>
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      background: 'rgba(0,0,0,0.7)',
+                      backdropFilter: 'blur(4px)',
+                      padding: '2px 7px',
+                      borderRadius: 99,
+                      color: '#fff',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      letterSpacing: '0.04em',
+                    }}>
+                      <Icon name="gear" style={{ fontSize: 11 }} />
+                      <span>AUTO</span>
+                    </div>
+                  </div>
+                </div>
+              ) : th.id === 'halloween' ? (
+                <div className="theme-card-preview" style={{ background: th.bg, position: 'relative' }}>
+                  <Icon name="spiderweb" style={{ position: 'absolute', top: 1, right: 3, color: '#ff9b3e', opacity: 0.65, fontSize: 24 }} />
+                  <Icon name="ghost" style={{ position: 'absolute', bottom: 10, right: 6, color: '#ffffff', opacity: 0.65, fontSize: 13 }} />
+                  <div className="theme-card-preview-bar">
+                    <Icon name="bat" style={{ color: '#ff7037', fontSize: 13, opacity: 0.95 }} />
+                    <div className="theme-card-preview-pill" style={{ background: '#b8d14b' }} />
+                  </div>
+                  <div className="theme-card-preview-body">
+                    <div className="theme-card-preview-surface" style={{ background: th.surface, gap: 5 }}>
+                      <Icon name="pumpkin" style={{ color: '#ff7037', fontSize: 13 }} />
+                      <div className="theme-card-preview-line" style={{ width: 24, color: th.label }} />
+                      <div style={{ width: 6, height: 6, borderRadius: 2, background: '#ff7037', marginLeft: 'auto' }} />
+                    </div>
+                    <div className="theme-card-spectrum" style={{
+                      background: `linear-gradient(to right, ${th.spectrum.join(', ')})`
+                    }} />
+                  </div>
+                </div>
+              ) : th.id === 'christmas' ? (
+                <div className="theme-card-preview" style={{ background: th.bg, position: 'relative' }}>
+                  <Icon name="snowflake" style={{ position: 'absolute', top: 3, right: 6, color: '#ecffeb', opacity: 0.5, fontSize: 14 }} />
+                  <div className="theme-card-preview-bar">
+                    <Icon name="tree" style={{ color: '#27a300', fontSize: 13 }} />
+                    <div className="theme-card-preview-pill" style={{ background: '#ff0000' }} />
+                  </div>
+                  <div className="theme-card-preview-body">
+                    <div className="theme-card-preview-surface" style={{ background: th.surface, gap: 5, border: '0.5px solid rgba(39,163,0,0.45)' }}>
+                      <Icon name="candyCane" style={{ color: '#ff0000', fontSize: 12 }} />
+                      <div className="theme-card-preview-line" style={{ width: 24, color: th.label }} />
+                      <div style={{ width: 6, height: 6, borderRadius: 2, background: '#27a300', marginLeft: 'auto' }} />
+                    </div>
+                    <div className="theme-card-spectrum" style={{
+                      background: `linear-gradient(to right, ${th.spectrum.join(', ')})`
+                    }} />
+                  </div>
+                </div>
+              ) : th.spectrum ? (
+                <div className="theme-card-preview" style={{ background: th.bg }}>
+                  <div className="theme-card-preview-bar">
+                    <div className="theme-card-preview-line" style={{ width: 28, color: th.label }} />
+                    <div className="theme-card-preview-pill" style={{ background: th.accent }} />
+                  </div>
+                  <div className="theme-card-preview-body">
+                    <div className="theme-card-preview-surface" style={{ background: th.surface }}>
+                      <div className="theme-card-preview-line" style={{ width: 36, color: th.label }} />
+                      <div style={{ width: 6, height: 6, borderRadius: 2, background: th.accent, marginLeft: 'auto' }} />
+                    </div>
+                    <div className="theme-card-spectrum" style={{
+                      background: `linear-gradient(to right, ${th.spectrum.join(', ')})`
+                    }} />
+                  </div>
+                </div>
+              ) : (
+                <div className="theme-card-preview" style={{ background: th.bg }}>
+                  <div className="theme-card-preview-bar">
+                    <div className="theme-card-preview-line" style={{ width: 28, color: th.label }} />
+                    <div className="theme-card-preview-pill" style={{ background: th.accent }} />
+                  </div>
+                  <div className="theme-card-preview-body">
+                    <div className="theme-card-preview-surface" style={{ background: th.surface }}>
+                      <div className="theme-card-preview-line" style={{ width: 42, color: th.label }} />
+                      <div style={{ width: 6, height: 6, borderRadius: 2, background: th.accent, marginLeft: 'auto' }} />
+                    </div>
+                    <div className="theme-card-preview-surface" style={{ background: th.surface, opacity: 0.65 }}>
+                      <div className="theme-card-preview-line" style={{ width: 28, color: th.label }} />
+                    </div>
+                  </div>
+                </div>
+              )}
+              {isSel && (
+                <div className="theme-card-check">
+                  <Icon name="check" style={{ fontSize: 11 }} />
+                </div>
+              )}
+              <div className="theme-card-info">
+                <div className="theme-card-header">
+                  <span className="theme-card-title" style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {th.id === 'halloween' && <Icon name="pumpkin" style={{ color: '#ff7037', fontSize: 13, flex: 'none' }} />}
+                    {th.id === 'christmas' && <Icon name="tree" style={{ color: '#27a300', fontSize: 13, flex: 'none' }} />}
+                    {th.name}
+                  </span>
+                  <span className="theme-card-badge">{th.badge}</span>
+                </div>
+                <span className="theme-card-desc">{th.desc}</span>
+              </div>
+            </button>
+          )
+        })}
+      </div>
       {/* Purely how the muscle map is drawn — nothing else in the app reads this. */}
       <Row icon="figureStrength" iconTint="var(--teal)" title={t('Body diagram')}>
         <Segmented
@@ -374,7 +670,7 @@ export default function Settings() {
         <span className="lrow-t">{t('Accent color')}</span>
         <div className="swatches">
           {Object.entries(ACCENTS).map(([k, c]) => (
-            <button key={k} className={'swatch' + ((S.accent || 'lime') === k ? ' on' : '')}
+            <button key={k} className={'swatch' + ((S.accent || 'pink') === k ? ' on' : '')}
               style={{ background: c }} onClick={() => update(s => { s.accent = k })} aria-label={k} />
           ))}
         </div>
@@ -383,7 +679,7 @@ export default function Settings() {
 
     {/* ---------- data: fill it, bring things over, back it up, wipe it ---------- */}
     <Section title={t('Data')}>
-      <Row icon="sparkles" iconTint="var(--acc)" title={t('Load starter plan')} accessory="chevron" onClick={starterPlanSheet} />
+      <Row icon={isHalloween ? 'pumpkin' : isChristmas ? 'gift' : 'sparkles'} iconTint={isHalloween ? 'var(--orange)' : isChristmas ? 'var(--red)' : 'var(--acc)'} title={t('Load starter plan')} accessory="chevron" onClick={starterPlanSheet} />
       <Row icon="shuffle" iconTint="var(--teal)" title={t('Import from another app')}
         subtitle={t('FitNotes, Strong, Hevy — or body weight from Apple Health')}
         accessory="chevron" onClick={() => importRef.current.click()} />
@@ -396,7 +692,7 @@ export default function Settings() {
         subtitle={t('Saves a dated copy to the Documents folder after finishing a workout or editing a routine — point a sync app at it, or copy it out by hand.')}>
         <Switch checked={!!S.autoBackup} onChange={v => update(s => { s.autoBackup = v })} />
       </Row>}
-      <Row icon="trash" iconTint="var(--red)" title={t('Reset everything')} danger onClick={resetEverything} />
+      <Row icon={isHalloween ? 'spiderweb' : isChristmas ? 'snowflake' : 'trash'} iconTint="var(--red)" title={t('Reset everything')} danger onClick={resetEverything} />
     </Section>
     <input ref={fileRef} type="file" accept=".json,application/json" style={{ display: 'none' }} onChange={doImport} />
     {/* Reset after reading so picking the same file twice still fires onChange. */}

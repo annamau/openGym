@@ -91,4 +91,24 @@ export const weekKey = (iso, ws = MONDAY) => isoOf(startOfWeek(iso, ws))
 export const localTZ = () => { try { return Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC' } catch { return 'UTC' } }
 
 export const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7)
-export const ACCENTS = { lime: '#ff9ebb', sky: '#ff9ebb', orange: '#ff7aa2', violet: '#602437', pink: '#ff7aa2', red: '#b9375e', teal: '#ffc2d4', gold: '#ffe0e9' }
+
+export const ACCENTS = {
+  pink: '#ff7aa2',
+  rose: '#ff9ebb',
+  coral: '#f94144',
+  orange: '#f8961e',
+  amber: '#f9c74f',
+  lime: '#30d158',
+  sage: '#90be6d',
+  mint: '#43aa8b',
+  teal: '#4d908e',
+  ocean: '#277da1',
+  sky: '#0a84ff',
+  violet: '#bf5af2',
+  red: '#ff453a',
+  gold: '#ffd60a',
+  pumpkin: '#ff7037',
+  slime: '#b8d14b',
+  candy: '#ff0000',
+  pine: '#27a300',
+}

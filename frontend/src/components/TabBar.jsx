@@ -29,6 +29,10 @@ export default function TabBar({ onStart }) {
     </button>
   )
 
+  const startIcon = S.theme === 'halloween'
+    ? 'pumpkin'
+    : (S.theme === 'christmas' ? 'tree' : (S.active ? (cur === 'workout' ? 'dumbbell' : 'play') : 'dumbbell'))
+
   return (
     <nav id="tabbar">
       <Tab k="home" icon="house" to="/home" label={t('Home')} />
@@ -37,7 +41,7 @@ export default function TabBar({ onStart }) {
           tab it is and stays lit (#29); anywhere else it brings you back to the exercise you
           were on — the marker is kept in S.active.cur and never moves on its own (#21). */}
       <button className={'start' + (S.active ? ' rec' : '') + (S.active && cur === 'workout' ? ' on' : '')} onClick={startWorkout}>
-        <span className="cir"><Icon name={S.active ? (cur === 'workout' ? 'dumbbell' : 'play') : 'dumbbell'} /></span>
+        <span className="cir"><Icon name={startIcon} /></span>
         <span>{S.active ? (cur === 'workout' ? t('Workout') : t('Resume')) : t('Start')}</span>
       </button>
       <Tab k="stats" icon="chart" to="/stats" label={t('Stats')} />
