@@ -1,0 +1,396 @@
+{
+  "opengym_plan": 1,
+  "exported": "2026-09-26",
+  "name": "Hevy Routines",
+  "unit": "kg",
+  "week": {
+    "1": [
+      "r_hevy_chest"
+    ],
+    "2": [
+      "r_hevy_legs"
+    ],
+    "3": [
+      "r_hevy_arms"
+    ],
+    "4": [
+      "r_hevy_back"
+    ]
+  },
+  "routines": [
+    {
+      "id": "r_hevy_chest",
+      "name": "Chest Day",
+      "emoji": "barbell",
+      "ex": [
+        {
+          "id": "0025",
+          "sets": 4,
+          "reps": 10,
+          "weight": 90
+        },
+        {
+          "id": "0047",
+          "sets": 3,
+          "reps": 10,
+          "weight": 70
+        },
+        {
+          "id": "immui2v7hcz6tko",
+          "sets": 3,
+          "reps": 20,
+          "weight": 21
+        },
+        {
+          "id": "immui2v7hckownb",
+          "sets": 3,
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "id": "immui2v7hcmayyi",
+          "sets": 3,
+          "reps": 12,
+          "weight": 27
+        },
+        {
+          "id": "0596",
+          "sets": 3,
+          "reps": 12,
+          "weight": 93
+        },
+        {
+          "id": "0033",
+          "sets": 3,
+          "reps": 10,
+          "weight": 80
+        }
+      ]
+    },
+    {
+      "id": "r_hevy_legs",
+      "name": "Leg Day",
+      "emoji": "legs",
+      "ex": [
+        {
+          "id": "0743",
+          "sets": 3,
+          "reps": 12,
+          "weight": 147.5
+        },
+        {
+          "id": "0739",
+          "sets": 3,
+          "reps": 12,
+          "weight": 280
+        },
+        {
+          "id": "immui2v7hbx6l2r",
+          "sets": 3,
+          "reps": 12,
+          "weight": 87.5
+        },
+        {
+          "id": "0586",
+          "sets": 3,
+          "reps": 12,
+          "weight": 64
+        },
+        {
+          "id": "0585",
+          "sets": 3,
+          "reps": 12,
+          "weight": 78
+        },
+        {
+          "id": "1372",
+          "sets": 3,
+          "reps": 15,
+          "weight": 150
+        },
+        {
+          "id": "0597",
+          "sets": 3,
+          "reps": 12,
+          "weight": 79
+        },
+        {
+          "id": "0598",
+          "sets": 3,
+          "reps": 15,
+          "weight": 59
+        }
+      ]
+    },
+    {
+      "id": "r_hevy_arms",
+      "name": "Arms triceps and Abs",
+      "emoji": "arm",
+      "ex": [
+        {
+          "id": "0575",
+          "sets": 3,
+          "reps": 15,
+          "weight": 27
+        },
+        {
+          "id": "immui2v7h7gdtij",
+          "sets": 3,
+          "reps": 21,
+          "weight": 30
+        },
+        {
+          "id": "0312",
+          "sets": 3,
+          "reps": 20,
+          "weight": 32
+        },
+        {
+          "id": "0591",
+          "sets": 3,
+          "reps": 12,
+          "weight": 20
+        },
+        {
+          "id": "immui2v7hbc0ixc",
+          "sets": 3,
+          "reps": 12,
+          "weight": 29.3
+        },
+        {
+          "id": "0405",
+          "sets": 3,
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "id": "0334",
+          "sets": 3,
+          "reps": 15,
+          "weight": 10
+        },
+        {
+          "id": "immui2v7hdkror0",
+          "sets": 3,
+          "reps": 12,
+          "weight": 77
+        }
+      ]
+    },
+    {
+      "id": "r_hevy_back",
+      "name": "Back Day",
+      "emoji": "pullup",
+      "ex": [
+        {
+          "id": "0652",
+          "sets": 5,
+          "reps": 5,
+          "weight": 20
+        },
+        {
+          "id": "0218",
+          "sets": 3,
+          "reps": 10,
+          "weight": 80
+        },
+        {
+          "id": "2330",
+          "sets": 3,
+          "reps": 12,
+          "weight": 66
+        },
+        {
+          "id": "0573",
+          "sets": 3,
+          "reps": 15,
+          "weight": 24
+        },
+        {
+          "id": "0826",
+          "sets": 3,
+          "reps": 15,
+          "weight": 0
+        },
+        {
+          "id": "1452",
+          "sets": 3,
+          "reps": 15,
+          "weight": 73.3
+        },
+        {
+          "id": "0407",
+          "sets": 3,
+          "reps": 20,
+          "weight": 30
+        }
+      ]
+    },
+    {
+      "id": "r_hevy_shoulders_abs",
+      "name": "Shoulders and Abs Day",
+      "emoji": "dumbbell",
+      "ex": [
+        {
+          "id": "0405",
+          "sets": 4,
+          "reps": 12,
+          "weight": 36
+        },
+        {
+          "id": "0334",
+          "sets": 3,
+          "reps": 15,
+          "weight": 20
+        },
+        {
+          "id": "0406",
+          "sets": 3,
+          "reps": 15,
+          "weight": 56
+        },
+        {
+          "id": "0603",
+          "sets": 3,
+          "reps": 12,
+          "weight": 35
+        },
+        {
+          "id": "0584",
+          "sets": 3,
+          "reps": 15,
+          "weight": 30
+        },
+        {
+          "id": "immui2v7hdfx5cv",
+          "sets": 3,
+          "reps": 15,
+          "weight": 50
+        },
+        {
+          "id": "0826",
+          "sets": 3,
+          "reps": 15,
+          "weight": 0
+        },
+        {
+          "id": "0407",
+          "sets": 3,
+          "reps": 20,
+          "weight": 32
+        }
+      ]
+    }
+  ],
+  "customEx": [
+    {
+      "id": "immui2v7hcz6tko",
+      "n": "single arm cable crossover",
+      "bp": "chest",
+      "eq": "cable",
+      "tg": "chest",
+      "primaries": [
+        "chest"
+      ],
+      "secondaries": [
+        "deltoids"
+      ],
+      "custom": true
+    },
+    {
+      "id": "immui2v7hckownb",
+      "n": "chest fly (band)",
+      "bp": "chest",
+      "eq": "band",
+      "tg": "chest",
+      "primaries": [
+        "chest"
+      ],
+      "secondaries": [
+        "deltoids"
+      ],
+      "custom": true
+    },
+    {
+      "id": "immui2v7hcmayyi",
+      "n": "low cable fly crossovers",
+      "bp": "chest",
+      "eq": "cable",
+      "tg": "chest",
+      "primaries": [
+        "chest"
+      ],
+      "secondaries": [
+        "deltoids"
+      ],
+      "custom": true
+    },
+    {
+      "id": "immui2v7hdfx5cv",
+      "n": "super crunch",
+      "bp": "waist",
+      "eq": "machine",
+      "tg": "abs",
+      "primaries": [
+        "abs"
+      ],
+      "secondaries": [
+        "obliques"
+      ],
+      "custom": true
+    },
+    {
+      "id": "immui2v7hbx6l2r",
+      "n": "hip thrust (barbell)",
+      "bp": "upper legs",
+      "eq": "barbell",
+      "tg": "gluteal",
+      "primaries": [
+        "gluteal"
+      ],
+      "secondaries": [
+        "hamstring",
+        "quadriceps"
+      ],
+      "custom": true
+    },
+    {
+      "id": "immui2v7h7gdtij",
+      "n": "21s bicep curl",
+      "bp": "upper arms",
+      "eq": "barbell",
+      "tg": "biceps",
+      "primaries": [
+        "biceps"
+      ],
+      "secondaries": [
+        "forearm"
+      ],
+      "custom": true
+    },
+    {
+      "id": "immui2v7hbc0ixc",
+      "n": "triceps rope pushdown",
+      "bp": "upper arms",
+      "eq": "cable",
+      "tg": "triceps",
+      "primaries": [
+        "triceps"
+      ],
+      "secondaries": [],
+      "custom": true
+    },
+    {
+      "id": "immui2v7hdkror0",
+      "n": "seated triceps press",
+      "bp": "upper arms",
+      "eq": "dumbbell",
+      "tg": "triceps",
+      "primaries": [
+        "triceps"
+      ],
+      "secondaries": [],
+      "custom": true
+    }
+  ]
+}

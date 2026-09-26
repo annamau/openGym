@@ -244,6 +244,24 @@ export default function Settings() {
     }
     rd.readAsText(f)
   }
+  const restoreHevyData = () => {
+    confirmSheet({
+      title: t('Restore Hevy data?'),
+      message: t('This loads your 5 reconstructed routines, 4-day weekly plan, and 203 past workouts.'),
+      confirmText: t('Import'),
+      onConfirm: async () => {
+        try {
+          const res = await fetch('/hevy-backup.json')
+          const data = await res.json()
+          replaceState(Object.assign(JSON.parse(JSON.stringify(DEF)), data), true)
+          toast(t('Imported 5 routines and 203 workouts from Hevy!'))
+          nav('/home')
+        } catch (e) {
+          toast(t('Failed to load backup: {0}', e.message))
+        }
+      }
+    })
+  }
   const signInHere = async () => {
     try { const u = await passkeyLogin(); setUser(u); await adoptProfile(askAddDeviceData); toast(t('Welcome back, {0}', u.name)) }
     catch (e) { if (e.name !== 'NotAllowedError' && e.name !== 'AbortError') toast(e.message || t('Sign-in failed')) }
@@ -686,6 +704,9 @@ export default function Settings() {
       <Row icon="key" iconTint="var(--teal)" title={t('Import from Hevy')}
         subtitle={t('Pull your history with a Hevy Pro API key')}
         accessory="chevron" onClick={importFromHevy} />
+      <Row icon="sparkles" iconTint="var(--acc)" title={t('Restore Hevy data (1-tap)')}
+        subtitle={t('Load your 5 routines and 203 workouts')}
+        accessory="chevron" onClick={restoreHevyData} />
       <Row icon="upload" iconTint="var(--blue)" title={t('Import backup')} accessory="chevron" onClick={() => fileRef.current.click()} />
       <Row icon="download" iconTint="var(--blue)" title={t('Export backup (JSON)')} accessory="chevron" onClick={doExport} />
       {MOBILE && <Row icon="history" iconTint="var(--blue)" title={t('Auto-backup on changes')}

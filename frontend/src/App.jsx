@@ -121,6 +121,27 @@ function Shell() {
     if (MOBILE || !user || !ready) return
     syncPushSubscription().catch(() => {})
   }, [user?.id, ready])
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const hasImportParam = params.get('import') === 'hevy' || window.location.hash.includes('import=hevy')
+    if (hasImportParam) {
+      fetch('/hevy-backup.json')
+        .then(r => r.json())
+        .then(data => {
+          if (data && data.workouts && data.routines) {
+            useStore.getState().replaceState(data, true)
+            useUI.getState().toast('Imported 5 routines and 203 workouts from Hevy!')
+            const cleanUrl = window.location.origin + window.location.pathname + '#/home'
+            window.history.replaceState(null, '', cleanUrl)
+            navigate('/home', { replace: true })
+          }
+        })
+        .catch(err => {
+          console.error('Auto-import failed:', err)
+        })
+    }
+  }, [navigate])
   useEffect(() => {
     const onScroll = () => {
       // Modals pins the body while a sheet is open; scrollY is 0 then, not a position.

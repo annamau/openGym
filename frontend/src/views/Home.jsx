@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
+import { useUI } from '../store/useUI.js'
 import { effectiveRoutines, effectiveRoutineIds, nextTrainingDay, streakWeeks, lastBW, setsDoneActive } from '../lib/history.js'
 import { fmtNum, fmtDate, todayISO, isoOf, weekKey, weekStartOf, weekDayOffset, DAYS, DAYN } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
@@ -16,6 +17,7 @@ export default function Home() {
   const nav = useNavigate()
   const S = useStore(s => s.S)
   const user = useStore(s => s.user)
+  const toast = useUI(s => s.toast)
   const [weekOffset, setWeekOffset] = useState(0)
 
   const today = new Date()
@@ -133,8 +135,19 @@ export default function Home() {
           <span className="lrow-i"><Icon name="sparkles" /></span>
           <div className="big" style={{ fontSize: 22 }}>{t('Welcome!')}</div>
         </div>
-        <div className="muted small" style={{ marginBottom: 12 }}>{t('Set up your weekly routine to get going — or load a ready-made starter plan.')}</div>
-        <Button variant="primary" icon="sparkles" onClick={starterPlanSheet}>{t('Load starter plan')}</Button>
+        <div className="muted small" style={{ marginBottom: 12 }}>{t('Set up your weekly routine to get going — or load your Hevy data.')}</div>
+        <Button variant="primary" icon="sparkles" onClick={async () => {
+          try {
+            const r = await fetch('/hevy-backup.json')
+            const d = await r.json()
+            useStore.getState().replaceState(d, true)
+            toast(t('Imported 5 routines and 203 workouts from Hevy!'))
+          } catch(e) {
+            toast(e.message)
+          }
+        }}>{t('Import Hevy routines & workouts')}</Button>
+        <div style={{ height: 8 }} />
+        <Button variant="tinted" icon="sparkles" onClick={starterPlanSheet}>{t('Load starter plan')}</Button>
         <div style={{ height: 8 }} /><Button onClick={() => nav('/plan')}>{t('Build my own plan')}</Button>
       </div>
     )}
