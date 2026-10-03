@@ -1,0 +1,33 @@
+{
+  "_comment": "Weekly targets are effective sets per muscle (primary = 1.0, secondary = 0.4, openGym's own convention). Edit freely.",
+  "targets": { "upper-back": 12, "gluteal": 12, "chest": 8, "biceps": 8 },
+  "labels": { "upper-back": "back", "gluteal": "glutes", "chest": "chest", "biceps": "biceps" },
+  "priority": { "upper-back": 1, "gluteal": 1, "chest": 0.5, "biceps": 0.5 },
+  "stimulusFactors": { "conditioning": 0.35, "cardio": 0.15, "_comment": "How much a conditioning set (wall balls, sleds, metcon reps) or a cardio set (run, row, ski) counts toward the weekly targets, relative to a strength set. A first guess: tune it after a few real weeks." },
+  "overlapMinSets": 2,
+  "overlapHighSets": 3.5,
+  "regions": {
+    "legs": ["quadriceps", "hamstring", "gluteal", "adductors", "calves", "tibialis", "hip-flexors"],
+    "push": ["chest", "deltoids", "triceps", "serratus"],
+    "pull": ["upper-back", "biceps", "trapezius", "forearm"],
+    "core": ["abs", "obliques", "lower-back"]
+  },
+  "runs": {
+    "_comment": "ASSUMED. Your real runs live in Garmin/Google Calendar; edit this to match, or set to {} to ignore runs.",
+    "sun": { "kind": "long", "hour": 9 },
+    "mon": { "kind": "easy", "hour": 18.5 },
+    "fri": { "kind": "easy", "hour": 18.5 }
+  },
+  "runLoad": {
+    "long": { "quadriceps": 5, "hamstring": 3, "calves": 5, "gluteal": 3 },
+    "easy": { "quadriceps": 2, "hamstring": 1.5, "calves": 2, "gluteal": 1.5 }
+  },
+  "freeScoring": { "penaltyWeight": 0.6, "rotationBonus": 2, "runWeight": 0.5, "windowHours": 72 },
+  "addOns": {
+    "_comment": "Optional suggestions only. Never added to your routine without you saying so. Titles use Hevy names.",
+    "upper-back": { "title": "Lat Pulldown (Machine)", "perSet": 1 },
+    "gluteal": { "title": "Hip Thrust (Machine)", "perSet": 1 },
+    "chest": { "title": "Bench Press (Barbell)", "perSet": 1 },
+    "biceps": { "title": "Bicep Curl (Machine)", "perSet": 1 }
+  }
+}

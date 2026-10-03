@@ -1,0 +1,184 @@
+{
+  "fetchedAt": "2026-10-04T20:00:00Z",
+  "gym": {
+    "id": 0,
+    "name": "DEMO (synthetic)"
+  },
+  "feedSize": 6,
+  "items": [
+    {
+      "post": {
+        "id": 9101,
+        "wodClass": "Hyrox",
+        "TIPOWODs": [
+          {
+            "title": "Hyrox Calentamiento"
+          },
+          {
+            "title": "Hyrox Engine"
+          }
+        ]
+      },
+      "detail": {
+        "recordDate": "6 de Octubre de 2026",
+        "TIPOWODs": [
+          {
+            "title": "Hyrox Calentamiento",
+            "notes": "2 rondas: 200m Run, 10 Air Squat, 10 Walking Lunge",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          },
+          {
+            "title": "Hyrox Engine",
+            "notes": "5 rondas\n600m Run\n25m Sled Push\n25m Sled Pull\n20 Wall Ball",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          }
+        ],
+        "ejerRate": []
+      }
+    },
+    {
+      "post": {
+        "id": 9102,
+        "wodClass": "WOD",
+        "TIPOWODs": [
+          {
+            "title": ""
+          }
+        ]
+      },
+      "detail": {
+        "recordDate": "6 de Octubre de 2026",
+        "TIPOWODs": [
+          {
+            "title": "",
+            "notes": "EMOM 12\nMin 1: 12 Cal Row\nMin 2: 10 Toes to Bar\nMin 3: 8 Dumbbell Snatch",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          }
+        ],
+        "ejerRate": []
+      }
+    },
+    {
+      "post": {
+        "id": 9201,
+        "wodClass": "WOD",
+        "TIPOWODs": [
+          {
+            "title": ""
+          },
+          {
+            "title": ""
+          }
+        ]
+      },
+      "detail": {
+        "recordDate": "7 de Octubre de 2026",
+        "TIPOWODs": [
+          {
+            "title": "",
+            "notes": "5x5 Back Squat",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          },
+          {
+            "title": "",
+            "notes": "For time (cap 12)\n21-15-9\nThruster (43/30 kg)\nPull-ups\nTime cap 12",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          }
+        ],
+        "ejerRate": []
+      }
+    },
+    {
+      "post": {
+        "id": 9202,
+        "wodClass": "Hyrox",
+        "TIPOWODs": [
+          {
+            "title": "Hyrox Strength"
+          }
+        ]
+      },
+      "detail": {
+        "recordDate": "7 de Octubre de 2026",
+        "TIPOWODs": [
+          {
+            "title": "Hyrox Strength",
+            "notes": "4x10 Bench Press",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          }
+        ],
+        "ejerRate": []
+      }
+    },
+    {
+      "post": {
+        "id": 9301,
+        "wodClass": "Hyrox",
+        "TIPOWODs": [
+          {
+            "title": "Hyrox Race Sim"
+          }
+        ]
+      },
+      "detail": {
+        "recordDate": "8 de Octubre de 2026",
+        "TIPOWODs": [
+          {
+            "title": "Hyrox Race Sim",
+            "notes": "AMRAP 30\n500m Run\n15 Burpee Broad Jump\n100m Farmers Carry\n12 Sandbag Lunges\n300m SkiErg",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          }
+        ],
+        "ejerRate": []
+      }
+    },
+    {
+      "post": {
+        "id": 9302,
+        "wodClass": "WOD",
+        "TIPOWODs": [
+          {
+            "title": ""
+          },
+          {
+            "title": ""
+          }
+        ]
+      },
+      "detail": {
+        "recordDate": "8 de Octubre de 2026",
+        "TIPOWODs": [
+          {
+            "title": "",
+            "notes": "Deadlift 5x3",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          },
+          {
+            "title": "",
+            "notes": "3 rondas\n12 Box Jump\n10 Push-up\n200m Run",
+            "deleted": "0",
+            "rondas": null,
+            "timecap": null
+          }
+        ],
+        "ejerRate": []
+      }
+    }
+  ]
+}

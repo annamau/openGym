@@ -1,0 +1,13 @@
+{
+  "name": "opengym-bridge",
+  "private": true,
+  "type": "module",
+  "description": "Aimharder class WODs -> openGym routines, week analysis and free-workout recommendation. Zero runtime dependencies.",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "test": "node --test",
+    "fetch": "node src/cli.mjs fetch",
+    "plan": "node src/cli.mjs plan"
+  },
+  "license": "AGPL-3.0-or-later"
+}

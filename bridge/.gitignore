@@ -1,0 +1,8 @@
+# Never commit credentials, tokens, backups of your state, or your real WODs
+.opengym-token.json
+backups/
+out/
+*.local.json
+# your own routines (personal training data): keep them local, never publish them
+config/free/*.txt
+!config/free/*.example.txt
