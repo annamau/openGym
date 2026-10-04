@@ -17,6 +17,10 @@ import { norm, DAY_LONG, prettyDate, DAYS, round1 } from './util.mjs'
 import { matchMovement, readSegment, segmentsOf, isSkippable, resolveEntry } from './movements.mjs'
 
 const LB_TO_KG = 0.45359237
+// Sanity limits. A coach typing 9999 for "max reps" must never end up as 9999 reps in your plan: a value
+// above these is replaced by a safe default, says so in the routine note, and is listed as CHECK in the report.
+export const LIMITS = { reps: 400, kg: 400, sets: 20, cardioMin: 60 }
+const DEFAULT_REPS = 10
 const SKIP_BLOCK_TITLE = /calent|warm|movilidad|mobility|cool ?down|vuelta a la calma|estir|stretch|activaci/
 
 // Lines that describe the format of a block (not a movement): never reported as "not recognised".
@@ -47,7 +51,7 @@ export function parseFormat(block) {
   else if ((m = /emom\s*(?:de\s*)?(\d+)/.exec(t))) { f.kind = 'emom'; f.minutes = +m[1]; f.label = `EMOM ${m[1]}′` }
   else if ((m = /\b(\d{1,3}(?:\s*[-–]\s*\d{1,3}){2,})\b/.exec(t))) {
     f.kind = 'ladder'; f.ladder = m[1].split(/\s*[-–]\s*/).map(Number); f.label = m[1].replace(/\s+/g, '')
-  } else if ((m = /(\d+)\s*[x×]\s*(\d+)/.exec(t))) { f.kind = 'strength'; f.sets = +m[1]; f.reps = +m[2]; f.label = `${m[1]}×${m[2]}` }
+  } else if ((m = /(?<!\d)(\d{1,2})\s*[x×]\s*(\d{1,3})(?!\d)/.exec(t))) { f.kind = 'strength'; f.sets = +m[1]; f.reps = +m[2]; f.label = `${m[1]}×${m[2]}` }
   else if ((m = /(\d+)\s*(?:rondas|rounds|rds)\b/.exec(t)) || (m = block.rounds ? [null, block.rounds] : null)) {
     f.kind = 'rounds'; f.rounds = +m[1]; f.label = `${m[1]} rounds`
   }
@@ -163,6 +167,7 @@ export function buildRoutine(workout, cls, { catalogue } = {}) {
   const kindSets = {}              // exercise id -> { strength, conditioning, cardio } sets, for the stimulus discount
   const report = []                // one line per movement found
   const unresolved = []
+  const warnings = []              // values that looked wrong and were replaced by a default
   const skippedBlocks = []
   let strengthSets = 0, condMinutes = 0, cardioCount = 0
 
@@ -247,6 +252,11 @@ export function buildRoutine(workout, cls, { catalogue } = {}) {
       else if (entry.strength) { sets = 3; setsSource = 'default' }
       else { sets = 1; setsSource = 'single' }
 
+      if (sets > LIMITS.sets) {
+        warnings.push(`${entry.label}: ${sets} sets looks far too many (${setsSource}), so I wrote ${LIMITS.sets}. Check it.`)
+        sets = LIMITS.sets
+      }
+
       const resolved = resolveEntry(entry, catalogue)
       const id = resolved.kind === 'catalogue' ? resolved.id : resolved.custom.id
       if (resolved.kind === 'custom') customs.set(id, resolved.custom)
@@ -272,6 +282,10 @@ export function buildRoutine(workout, cls, { catalogue } = {}) {
         else cfg.min = cardioMinutes(entry, seg, perMove ? perMove / Math.max(1, sets) : null)   // the movement's share of the block, per set
         cardioCount++
         if (!blockMinutes) condMinutes += cfg.min * sets
+        if (cfg.min > LIMITS.cardioMin) {
+          warnings.push(`${entry.label}: ${cfg.min} min per set looks wrong, so I wrote ${LIMITS.cardioMin}. Check it.`)
+          cfg.min = LIMITS.cardioMin
+        }
         notes.push('time is an estimate')
       } else if (entry.mode === 'time' || kind === 'stations') {
         cfg.mode = 'time'
@@ -288,11 +302,21 @@ export function buildRoutine(workout, cls, { catalogue } = {}) {
         else if (textFmt.kind === 'ladder' && !ex) {
           reps = Math.round(mean(textFmt.ladder))
         } else reps = seg.reps
+        if (reps != null && reps > LIMITS.reps) {       // 9999 typed for "max reps", a stray number, a unit mix-up
+          warnings.push(`${entry.label}: the gym lists ${reps} reps per set, which is not believable (perhaps "as many as possible"). I wrote ${DEFAULT_REPS} instead. Check it.`)
+          notes.push(`gym value ${reps} ignored`)
+          reps = null
+        }
         const distance = ex ? (['m', 'km', 'cal'].includes(seg.valueUnit) ? ex.values[0] : null) : seg.distance
         const dunit = ex ? seg.valueUnit : seg.unit
-        cfg.reps = reps ?? distance ?? 10
+        cfg.reps = reps ?? distance ?? DEFAULT_REPS
         if (distance != null && dunit) notes.push(`${distance} ${dunit}`)
         cfg.weight = ex ? loadKg(ex) : 0
+        if (cfg.weight > LIMITS.kg) {
+          warnings.push(`${entry.label}: the gym lists ${cfg.weight} kg, which is not believable. I left the weight empty. Check it.`)
+          notes.push(`gym load ${cfg.weight} kg ignored`)
+          cfg.weight = 0
+        }
         const ln = ex ? loadNote(ex) : ''
         if (ln) notes.push(ln)
         if (!ex) {
@@ -338,6 +362,7 @@ export function buildRoutine(workout, cls, { catalogue } = {}) {
     customEx: [...customs.values()],
     movements: report,
     unresolved: [...new Set(unresolved)],
+    warnings: [...new Set(warnings)],
     skippedBlocks,
     stimulus: kindSets,
     effort: { strengthSets, condMinutes: round1(condMinutes), cardioCount },

@@ -198,7 +198,7 @@ function cmdPlan(o) {
 
   const proposal = {
     createdAt: new Date().toISOString(), weekOf, selection,
-    classes: built.map(b => ({ date: b.date, day: b.day, cls: b.cls, routine: b.routine, customEx: b.customEx, unresolved: b.unresolved })),
+    classes: built.map(b => ({ date: b.date, day: b.day, cls: b.cls, routine: b.routine, customEx: b.customEx, unresolved: b.unresolved, warnings: b.warnings })),
     free: choice ? { key: choice.key, date: freeDate, routine: menu[choice.key].routine, customEx: menu[choice.key].customEx, options: freeRec.options.map(({ key, score, gain, penalty, rotation }) => ({ key, score, gain, penalty, rotation })) } : null,
     notFound: resolved.filter(r => r.status !== 'ok').map(r => ({ day: r.day, date: r.date, cls: r.cls, status: r.status })),
   }
@@ -354,6 +354,12 @@ export async function cmdWeek(o, io = { ask }) {
   }
   if (proposal.notFound.length) say(`   Not published yet: ${proposal.notFound.map(n => `${n.day} ${n.cls}`).join(', ')}. Run "npm run week" again later; routines already written are refreshed, never duplicated.`)
 
+  const checks = proposal.classes.flatMap(c => (c.warnings ?? []).map(w => `${DAY_LONG[c.day]} ${c.cls}: ${w}`))
+  if (checks.length) {
+    say(`\n   ${checks.length} value(s) in the gym's data looked wrong. I replaced them with safe defaults (marked in each exercise's note):`)
+    for (const w of checks) say(`     - ${w}`)
+    say('   Say N below if you would rather look at out/plan.txt first.')
+  }
   if (!isYes(await io.ask('\nWrite this to openGym now? [y/N] '))) {
     return say('Nothing was written. Happy with it later? "npm run week -- --skip-fetch" shows it again, or "node src/cli.mjs apply --yes".')
   }

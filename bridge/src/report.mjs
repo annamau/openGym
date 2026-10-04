@@ -37,6 +37,7 @@ export function renderPlan({ weekOf, selection, selectionNote, resolved, built, 
     L.push(`   Routine "${b.routine.name}" (what apply would create in openGym):`)
     for (const e of b.routine.ex) L.push(`      ${describeExercise(e, nameOf(e.id, b.customEx))}`)
     if (b.skippedBlocks.length) L.push(`   Warm-up blocks left out: ${b.skippedBlocks.length}`)
+    for (const w of b.warnings ?? []) L.push(`   CHECK: ${w}`)
     if (b.unresolved.length) L.push(`   NOT recognised (not counted): ${b.unresolved.join(' | ')}`)
     const approx = b.movements.filter(m => m.setsSource === 'amrap-estimate' || m.setsSource === 'default')
     if (approx.length) L.push(`   Set counts estimated for: ${[...new Set(approx.map(m => m.movement))].join(', ')}`)

@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeWorkout } from '../src/parse.mjs'
-import { buildRoutine, parseFormat, isFormatLine, loadHint, textSections, emomShape } from '../src/routine.mjs'
+import { buildRoutine, parseFormat, isFormatLine, loadHint, textSections, emomShape, LIMITS } from '../src/routine.mjs'
 import { matchMovement, readSegment, segmentsOf, isSkippable } from '../src/movements.mjs'
 import { catalogue, loadOf } from '../src/appbridge.mjs'
 import { hyroxTue, crossfitTue, crossfitWed, hyroxThu, crossfitThu, structured, realShape, pub } from './fixtures/week.mjs'
@@ -269,4 +269,48 @@ test('a cardio movement inside an EMOM gets its share of the block per set, not 
   assert.equal(bike.sets, 5)
   assert.equal(bike.min, 1)                       // 15 block minutes / 3 movements / 5 sets
   assert.equal(b.effort.condMinutes, 15)
+})
+
+test('a value that cannot be real (9999 typed for "max reps") is never written: safe default, a CHECK warning, and the cap holds after rows merge', () => {
+  const b = build(pub({ id: 1, date: '2026-10-07', blocks: [{ title: '3 RFT', notes: '' }, { title: 'OPEN', notes: '' }], ejer: [
+    { ejerName: 'Push-up', tipoWOD: 0, tWODnom: '3 RFT', formaReg: '3', valor1: ['10'], round: '1' },
+    { ejerName: 'Push-up', tipoWOD: 1, tWODnom: 'Libre', formaReg: '3', valor1: ['9999', '9999', '9999', '9999', '9999'] },
+  ] }), 'crossfit')
+  assert.ok(b.routine.ex.length >= 1)
+  for (const e of b.routine.ex) assert.ok(e.reps == null || e.reps <= LIMITS.reps, `${e.id} has ${e.reps} reps`)
+  assert.equal(b.warnings.length, 1)
+  assert.match(b.warnings[0], /9999 reps/)
+  assert.match(b.routine.ex.map(e => e.note).join(' '), /gym value 9999 ignored/)
+})
+
+test('an impossible weight is left empty and flagged; a believable one is kept', () => {
+  const heavy = build(pub({ id: 2, date: '2026-10-07', blocks: [{ title: 'Fuerza', notes: '', section: 1 }], ejer: [
+    { ejerName: 'Back Squat', tipoWOD: 0, tWODnom: 'Libre', formaReg: '4', valor1: ['5', '5', '5'], valor2: '9999', tipoud: 0 },
+  ] }), 'crossfit')
+  assert.equal(heavy.routine.ex[0].weight, 0)
+  assert.match(heavy.warnings.join(' '), /9999 kg/)
+  const ok = build(pub({ id: 3, date: '2026-10-07', blocks: [{ title: 'Fuerza', notes: '', section: 1 }], ejer: [
+    { ejerName: 'Back Squat', tipoWOD: 0, tWODnom: 'Libre', formaReg: '4', valor1: ['5', '5', '5'], valor2: '80', tipoud: 0 },
+  ] }), 'crossfit')
+  assert.equal(ok.routine.ex[0].weight, 80)
+  assert.deepEqual(ok.warnings, [])
+})
+
+test('too many sets is capped and flagged', () => {
+  const b = build(pub({ id: 4, date: '2026-10-07', blocks: [{ title: 'Fuerza', notes: '', section: 1 }], ejer: [
+    { ejerName: 'Back Squat', tipoWOD: 0, tWODnom: 'Libre', formaReg: '3', valor1: Array(30).fill('5') },
+  ] }), 'crossfit')
+  assert.equal(b.routine.ex[0].sets, LIMITS.sets)
+  assert.match(b.warnings.join(' '), /30 sets/)
+})
+
+test('"NxM" in block text needs sane numbers: a stray 10x6252 is not a set scheme, 5x5 and 4 x 10 still are', () => {
+  assert.equal(parseFormat({ notes: 'Ref 10x6252' }).kind, null)
+  assert.equal(parseFormat({ notes: 'codigo 2026x5' }).kind, null)
+  const a = parseFormat({ notes: '4 x 10 Front Squat' }), b = parseFormat({ notes: '5X5 Back Squat' })
+  assert.deepEqual([a.kind, a.sets, a.reps, b.sets, b.reps], ['strength', 4, 10, 5, 5])
+})
+
+test('ordinary weeks produce no warnings', () => {
+  for (const p of [crossfitWed, hyroxThu, crossfitTue, hyroxTue, structured, realShape(3)]) assert.deepEqual(build(p, 'crossfit').warnings, [])
 })
