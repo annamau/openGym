@@ -22,7 +22,7 @@ import { buildFreeMenu, recommendFree } from './free.mjs'
 import { renderPlan } from './report.mjs'
 import { OpenGymClient, OpenGymError, redeemPairingCode, saveToken, loadToken, syncToOpenGym } from './opengym.mjs'
 import { ask } from './prompt.mjs'
-import { DAYS, DAY_LONG, addDays, mondayOf, todayIso, weekdayOf, prettyDate } from './util.mjs'
+import { DAYS, DAY_LONG, addDays, mondayOf, todayIso, weekdayOf, prettyDate, norm } from './util.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const P = (...a) => path.resolve(ROOT, ...a)   // an absolute path (e.g. --out) is used as given
@@ -246,9 +246,65 @@ async function pairInteractively(io, preset = {}) {
  * The Sunday command. Everything that can be automated is: it reads the gym, plans the week, shows what it
  * would write and then asks. Nothing reaches openGym without a "y" from you.
  */
+const DAY_WORDS = {
+  mon: 'mon', monday: 'mon', lun: 'mon', lunes: 'mon', tue: 'tue', tues: 'tue', tuesday: 'tue', mar: 'tue', martes: 'tue',
+  wed: 'wed', wednesday: 'wed', mie: 'wed', miercoles: 'wed', thu: 'thu', thur: 'thu', thurs: 'thu', thursday: 'thu', jue: 'thu', jueves: 'thu',
+  fri: 'fri', friday: 'fri', vie: 'fri', viernes: 'fri', sat: 'sat', saturday: 'sat', sab: 'sat', sabado: 'sat', sun: 'sun', sunday: 'sun', dom: 'sun', domingo: 'sun',
+}
+const CLASS_WORDS = { hyrox: 'hyrox', crossfit: 'crossfit', cf: 'crossfit' }
+const SKIP_WORDS = new Set(['skip', 'no', 'not', 'without', 'sin', 'remove', 'cancel'])
+const ADD_WORDS = new Set(['add', 'also', 'plus', 'con'])
+const KEEP_WORDS = new Set(['ok', 'okay', 'keep', 'same', 'default', 'defaults', 'yes', 'y', 'si', 'vale'])
+const FILLER = new Set(['and', 'y', 'the', 'this', 'week', 'on', 'for', 'i', 'will', 'am', 'going', 'to', 'a', 'class', 'clase'])
+
+/**
+ * What you type when asked which classes you attend this week: "skip tue", "tue=crossfit",
+ * "skip tue and thu, add fri=crossfit". Enter alone keeps the defaults. Returns null when anything
+ * is unclear, so a typo is asked about again instead of guessed.
+ */
+export function parseWeekAnswer(text) {
+  const tokens = norm(text).replace(/[;,]/g, ' ').replace(/\s*=\s*/g, '=').split(/\s+/).filter(Boolean)
+  const skip = [], add = {}
+  let mode = null
+  for (const tok of tokens) {
+    if (SKIP_WORDS.has(tok)) { mode = 'skip'; continue }
+    if (ADD_WORDS.has(tok)) { mode = 'add'; continue }
+    if (KEEP_WORDS.has(tok) || FILLER.has(tok)) continue
+    const pair = /^([a-z]+)=([a-z]+)$/.exec(tok)
+    if (pair) {
+      const day = DAY_WORDS[pair[1]], cls = CLASS_WORDS[pair[2]]
+      if (!day || !cls) return null
+      add[day] = cls
+      continue
+    }
+    if (DAY_WORDS[tok] && mode === 'skip') { skip.push(DAY_WORDS[tok]); continue }
+    return null
+  }
+  if (tokens.length && !skip.length && !Object.keys(add).length && !tokens.every(t => KEEP_WORDS.has(t))) return null   // only filler: unclear
+  return { skip: [...new Set(skip)], add }
+}
+
+/** Shows the default classes and lets you change them for this week without remembering any flags. */
+async function askClasses(o, io) {
+  if (o.select || o.skip || o.add) return
+  const { sel } = loadConfig()
+  const show = selection => Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(' · ') || 'none'
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const answer = await io.ask(`Classes this week: ${show(sel.defaults)} (your defaults).\nPress Enter to keep them, or type a change, e.g.  skip tue   ·   tue=crossfit   ·   skip tue, add fri=crossfit\n> `)
+    const change = parseWeekAnswer(answer)
+    if (!change) { console.log('   I did not understand that. Examples: "skip tue", "skip tue thu", "tue=crossfit".'); continue }
+    if (change.skip.length) o.skip = change.skip.join(',')
+    if (Object.keys(change.add).length) o.add = Object.entries(change.add).map(([d, c]) => `${d}=${c}`).join(',')
+    console.log(`   This week: ${show(selectionFrom(o, sel).selection)}\n`)
+    return
+  }
+  throw new Error('Could not read the class change. Run again and type for example: skip tue')
+}
+
 export async function cmdWeek(o, io = { ask }) {
   const say = (...a) => console.log(...a)
   say('SUNDAY FLOW: 1/3 read the gym · 2/3 plan the week · 3/3 openGym (asks before writing)\n')
+  await askClasses(o, io)
   if (o['skip-fetch']) say('1/3 Using the publications already saved (--skip-fetch).')
   else { say('1/3 Reading the published classes from Aimharder (read-only)…'); await cmdFetch(o) }
 

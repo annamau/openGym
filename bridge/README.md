@@ -17,14 +17,16 @@ npm run week
 
 It does everything that can be done for you, in this order, and **writes to openGym only after you answer `y`**:
 
-1. asks for your Aimharder email and password (typed here, hidden, never saved) and reads the published classes;
+1. shows your default classes and asks if anything changes this week (press Enter to keep them, or type `skip tue`,
+   `tue=crossfit`, `skip tue, add fri=crossfit`), then asks for your Aimharder email and password (typed here,
+   hidden, never saved) and reads the published classes;
    only your selected classes are kept on disk (see "fetch" below);
 2. plans the week that starts next Monday and prints the report (also saved as `out/plan.txt`);
 3. asks whether to also create the free workout, shows exactly what would be added to openGym (a dry run),
    and asks “Write this to openGym now? [y/N]”. On `y` it backs up your openGym data, writes, and reads the result back.
 
-Variations: `npm run week -- --skip thu` (not going Thursday), `npm run week -- --select tue=crossfit,wed=crossfit`
-(different classes this week), `npm run week -- --skip-fetch` (re-show the last plan without logging in again),
+The same changes can be given as flags on the same line, which skips the question: `npm run week -- --skip thu`,
+`npm run week -- --select tue=crossfit,wed=crossfit`. Other options: `npm run week -- --skip-fetch` (re-show the last plan without logging in again),
 `npm run week -- --pick wed=9201` (when two publications match). If some classes are not published yet it says so;
 run it again later, routines already written are refreshed, never duplicated. The first time, and about every
 90 days, it asks for the openGym address and a pairing code (Settings → “Pair the mobile app”, valid 5 minutes).

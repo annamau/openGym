@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import fs from 'node:fs'
 import os from 'node:os'
 import path from 'node:path'
-import { cmdWeek } from '../src/cli.mjs'
+import { cmdWeek, parseWeekAnswer } from '../src/cli.mjs'
 import { saveToken } from '../src/opengym.mjs'
 import { jsonRes } from './helpers.mjs'
 import { week } from './fixtures/week.mjs'
@@ -30,7 +30,7 @@ function pretendServer({ rejectToken } = {}) {
 }
 
 /** Runs the Sunday command with scripted answers, in a sandbox that never touches the real out/, token or backups. */
-async function sunday({ answers, o = {}, paired = 'TOKEN-123', items = week, srvOpts }) {
+async function sunday({ answers, o = {}, paired = 'TOKEN-123', items = week, srvOpts, rawFirst = false }) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-week-'))
   const env = { BRIDGE_OUT_DIR: path.join(dir, 'out'), OPENGYM_TOKEN_FILE: path.join(dir, 'token.json'), BRIDGE_BACKUP_DIR: path.join(dir, 'backups') }
   const before = Object.fromEntries(Object.keys(env).map(k => [k, process.env[k]]))
@@ -44,7 +44,9 @@ async function sunday({ answers, o = {}, paired = 'TOKEN-123', items = week, srv
   globalThis.fetch = srv.fetch
   console.log = (...a) => say.push(a.join(' '))
   try {
-    await cmdWeek({ 'skip-fetch': true, 'week-of': '2026-10-05', ...o }, { ask: async q => { asked.push(q); return answers.shift() ?? '' } })
+    const oo = { 'skip-fetch': true, 'week-of': '2026-10-05', ...o }
+    if (!(oo.select || oo.skip || oo.add) && !rawFirst) answers = ['', ...answers]      // Enter = keep the default classes
+    await cmdWeek(oo, { ask: async q => { asked.push(q); return answers.shift() ?? '' } })
   } finally {
     globalThis.fetch = realFetch; console.log = realLog
     for (const [k, v] of Object.entries(before)) { if (v === undefined) delete process.env[k]; else process.env[k] = v }
@@ -84,7 +86,8 @@ test('week: the free workout is only created when you say yes, and it is remembe
 
 test('week: nothing is asked or written when none of your classes is published yet', async () => {
   const r = await sunday({ answers: [], o: { 'week-of': '2026-10-12' } })
-  assert.equal(r.asked.length, 0)
+  assert.equal(r.asked.length, 1, 'only the question about which classes you attend')
+  assert.match(r.asked[0], /Classes this week/)
   assert.equal(r.srv.puts.length, 0)
   assert.match(r.say, /nothing to write/)
 })
@@ -108,4 +111,33 @@ test('week: an expired pairing is replaced on the spot (only the code is asked),
 test('week: --skip drops a class from the plan and from what is written', async () => {
   const r = await sunday({ answers: ['n', 'y'], o: { skip: 'thu' } })
   assert.deepEqual(r.srv.state.routines.map(x => x.id), ['mine', 'ahw-2026-10-06-hyrox', 'ahw-2026-10-07-crossfit'])
+})
+
+test('week: it asks which classes you attend; typing "skip tue" drops Tuesday from the plan and the write', async () => {
+  const r = await sunday({ rawFirst: true, answers: ['skip tue', 'n', 'y'] })
+  assert.match(r.asked[0], /Tue hyrox · Wed crossfit · Thu hyrox/)
+  assert.deepEqual(r.srv.state.routines.map(x => x.id), ['mine', 'ahw-2026-10-07-crossfit', 'ahw-2026-10-08-hyrox'])
+  assert.match(r.say, /This week: Wed crossfit · Thu hyrox/)
+})
+
+test('week: typing "tue=crossfit" swaps the Tuesday class', async () => {
+  const r = await sunday({ rawFirst: true, answers: ['tue=crossfit', 'n', 'y'] })
+  assert.deepEqual(r.srv.state.routines.map(x => x.id), ['mine', 'ahw-2026-10-06-crossfit', 'ahw-2026-10-07-crossfit', 'ahw-2026-10-08-hyrox'])
+})
+
+test('week: an answer it cannot read is asked again, never guessed', async () => {
+  const r = await sunday({ rawFirst: true, answers: ['banana', 'skip thu', 'n', 'y'] })
+  assert.match(r.say, /did not understand/)
+  assert.deepEqual(r.srv.state.routines.map(x => x.id), ['mine', 'ahw-2026-10-06-hyrox', 'ahw-2026-10-07-crossfit'])
+  await assert.rejects(sunday({ rawFirst: true, answers: ['a', 'b', 'c'] }), /Could not read the class change/)
+})
+
+test('week answers: skip, swap and add, in English or Spanish day names', () => {
+  assert.deepEqual(parseWeekAnswer(''), { skip: [], add: {} })
+  assert.deepEqual(parseWeekAnswer('Skip Tue and Thu'), { skip: ['tue', 'thu'], add: {} })
+  assert.deepEqual(parseWeekAnswer('no martes'), { skip: ['tue'], add: {} })
+  assert.deepEqual(parseWeekAnswer('skip tue, add fri=crossfit'), { skip: ['tue'], add: { fri: 'crossfit' } })
+  assert.deepEqual(parseWeekAnswer('tue = crossfit'), { skip: [], add: { tue: 'crossfit' } })
+  assert.deepEqual(parseWeekAnswer('ok'), { skip: [], add: {} })
+  for (const bad of ['tue', 'skip banana', 'tue=yoga', 'wed hyrox', 'a', 'this week', 'skip']) assert.equal(parseWeekAnswer(bad), null, bad)
 })
