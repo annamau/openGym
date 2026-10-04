@@ -3,11 +3,15 @@
   "private": true,
   "type": "module",
   "description": "Aimharder class WODs -> openGym routines, week analysis and free-workout recommendation. Zero runtime dependencies.",
-  "engines": { "node": ">=22" },
+  "engines": {
+    "node": ">=22"
+  },
   "scripts": {
     "test": "node --test",
+    "week": "node src/cli.mjs week",
     "fetch": "node src/cli.mjs fetch",
-    "plan": "node src/cli.mjs plan"
+    "plan": "node src/cli.mjs plan",
+    "clean": "node src/cli.mjs clean"
   },
   "license": "AGPL-3.0-or-later"
 }

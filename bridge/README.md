@@ -7,11 +7,32 @@ workout) into your openGym as routines.
 It runs **on your computer**, in the `bridge/` folder of your openGym fork. No install step, no
 dependencies. Needs Node 22 or newer (`node --version`).
 
-## Sunday, step by step
+## Sunday: one command
+
+When the gym's notification arrives (around 8pm), open the VS Code terminal in the `bridge/` folder and run:
 
 ```
-cd bridge
+npm run week
+```
 
+It does everything that can be done for you, in this order, and **writes to openGym only after you answer `y`**:
+
+1. asks for your Aimharder email and password (typed here, hidden, never saved) and reads the published classes;
+   only your selected classes are kept on disk (see "fetch" below);
+2. plans the week that starts next Monday and prints the report (also saved as `out/plan.txt`);
+3. asks whether to also create the free workout, shows exactly what would be added to openGym (a dry run),
+   and asks “Write this to openGym now? [y/N]”. On `y` it backs up your openGym data, writes, and reads the result back.
+
+Variations: `npm run week -- --skip thu` (not going Thursday), `npm run week -- --select tue=crossfit,wed=crossfit`
+(different classes this week), `npm run week -- --skip-fetch` (re-show the last plan without logging in again),
+`npm run week -- --pick wed=9201` (when two publications match). If some classes are not published yet it says so;
+run it again later, routines already written are refreshed, never duplicated. The first time, and about every
+90 days, it asks for the openGym address and a pairing code (Settings → “Pair the mobile app”, valid 5 minutes).
+Afterwards: open openGym → Plan.
+
+The single steps below are the same flow, one command at a time:
+
+```
 1.  node src/cli.mjs fetch
 2.  node src/cli.mjs plan
 3.  (once, ever)   node src/cli.mjs pair --url https://YOUR-SITE.netlify.app
@@ -47,7 +68,7 @@ Useful options:
 | `--skip thu` / `--add fri=crossfit` | adjust the defaults for this week |
 | `--pick wed=9201` | when two publications match, say which one (`plan` lists their ids) |
 | `--free upper` / `--free legs` / `--free none` | override the recommendation |
-| `--last-free upper` | what you did last Monday (a small nudge to alternate when nothing else decides) |
+| `--last-free upper` | what you did last Monday (a small nudge to alternate; `week` remembers it for you after writing) |
 | `--week-of 2026-09-28` | analyse another week (must be a Monday) |
 | `plan --demo` | sample data, to see what the report looks like |
 
