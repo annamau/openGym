@@ -48,9 +48,16 @@ test('several matching publications are ambiguous and none is picked', () => {
   assert.equal(r[0].workout, undefined)
 })
 
-test('a publication that is neither Hyrox nor untitled is surfaced as unclear, not guessed', () => {
+test('a publication without the HYROX marker is the CrossFit one', () => {
   const odd = normalizeWorkout(...Object.values(pub({ id: 7777, date: '2026-10-09', blocks: [{ title: 'Open Gym', notes: 'x' }] }))).workout
   const r = resolveWeek([odd], { fri: 'crossfit' }, dates, DEFAULT_RULES)
+  assert.equal(r[0].status, 'ok')
+  assert.equal(r[0].workout.sourceId, 7777)
+})
+
+test('with crossfitIfNoMarker off, such a publication is surfaced as unclear, not guessed', () => {
+  const odd = normalizeWorkout(...Object.values(pub({ id: 7777, date: '2026-10-09', blocks: [{ title: 'Open Gym', notes: 'x' }] }))).workout
+  const r = resolveWeek([odd], { fri: 'crossfit' }, dates, { ...DEFAULT_RULES, crossfitIfNoMarker: false })
   assert.equal(r[0].status, 'missing')
   assert.equal(r[0].unclear.length, 1)
 })

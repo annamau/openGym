@@ -16,12 +16,24 @@ const m = (key, label, re, bp, primaries, secondaries, extra = {}) =>
   ({ key, label, re, bp, primaries, secondaries, ...extra })
 
 export const MOVEMENTS = [
+  m('sdhp', 'Sumo deadlift high pull', /sumo deadlift high pull|\bsdhp\b/, 'full body',
+    ['gluteal', 'trapezius'], ['hamstring', 'quadriceps', 'deltoids', 'lower-back', 'forearm'], { strength: false }),
+  m('wall-sit', 'Wall sit', /wall.?sit/, 'upper legs', ['quadriceps'], ['gluteal', 'calves'], { mode: 'time' }),
+  m('pullover', 'Pullover', /pull.?over/, 'back', ['upper-back'], ['chest', 'triceps']),
+  m('calf-raise', 'Calf raise', /calf raises?|heel drops?|elevaciones? de (gemelos?|talones)|gemelos?/, 'lower legs', ['calves'], ['tibialis']),
+  m('bird-dog', 'Bird dog / pointer', /\bpointer\b|bird.?dog/, 'waist', ['lower-back'], ['abs', 'gluteal'], { mode: 'time' }),
+  m('active-hang', 'Bar hang', /(active|passive|dead|bar) hang|hang (hold|on bar)|colgado de (la )?barra|suspension en barra/, 'back',
+    ['forearm'], ['upper-back', 'biceps', 'abs'], { mode: 'time' }),
+  m('shoulder-taps', 'Shoulder taps', /shoulder taps?|toques? de hombro/, 'waist', ['abs', 'deltoids'], ['obliques', 'chest']),
+  m('mountain-climber', 'Mountain climbers', /mountain climbers?|escaladores/, 'waist', ['abs'], ['deltoids', 'quadriceps', 'chest', 'hip-flexors']),
+  m('jumping-jack', 'Jumping jacks', /jumping jacks?|jacks\b/, 'cardio', ['calves'], ['deltoids', 'quadriceps']),
+  m('russian-baby', 'Russian baby makers (core)', /russian baby|baby makers?|leg raises?|elevaciones? de piernas|knees? up/, 'waist', ['abs'], ['hip-flexors', 'obliques']),
   // ---- Hyrox stations and cardio first: their names contain generic words (row, run, ski) ----
   m('sandbag-lunge', 'Sandbag lunge', /sandbag lunge|zancadas? (con )?(saco|sandbag)|lunges? con (saco|sandbag)/, 'upper legs',
     ['quadriceps', 'gluteal'], ['hamstring', 'adductors', 'calves', 'abs', 'lower-back']),
   m('burpee-broad-jump', 'Burpee broad jump', /burpee broad|burpees? (con )?salto (de )?longitud|\bbbj\b/, 'full body',
     ['chest', 'quadriceps'], ['triceps', 'deltoids', 'abs', 'gluteal', 'hamstring', 'calves']),
-  m('burpee', 'Burpee', /burpee/, 'full body',
+  m('burpee', 'Burpee', /burpee|down.?up/, 'full body',
     ['chest', 'quadriceps'], ['triceps', 'deltoids', 'abs', 'gluteal', 'hamstring', 'calves']),
   m('sled-pull', 'Sled pull', /sled pull|trineo (de )?(arrastre|tirar)|tirar (del )?trineo|arrastre (de )?trineo/, 'upper legs',
     ['hamstring', 'gluteal', 'upper-back'], ['quadriceps', 'biceps', 'forearm', 'lower-back']),
@@ -47,7 +59,7 @@ export const MOVEMENTS = [
     ['quadriceps', 'gluteal', 'hamstring', 'trapezius', 'deltoids'], ['triceps', 'lower-back', 'upper-back', 'forearm', 'abs', 'calves'], { strength: true }),
   m('snatch', 'Snatch', /snatch|arrancada/, 'full body',
     ['quadriceps', 'gluteal', 'hamstring', 'trapezius', 'deltoids'], ['upper-back', 'lower-back', 'triceps', 'forearm', 'abs', 'calves'], { strength: true }),
-  m('clean', 'Clean', /power clean|squat clean|hang (power |squat )?clean|cargada|\bclean\b/, 'full body',
+  m('clean', 'Clean', /power clean|squat clean|hang (power |squat )?clean|cargada|\bclean\b|c&j|clean (and|&|y) jerk|\bhpc\b/, 'full body',
     ['quadriceps', 'gluteal', 'hamstring', 'trapezius'], ['deltoids', 'lower-back', 'upper-back', 'forearm', 'abs', 'calves', 'biceps'], { strength: true }),
   m('overhead-squat', 'Overhead squat', /overhead squat|sentadilla (por encima|overhead)/, 'upper legs',
     ['quadriceps', 'gluteal', 'deltoids'], ['abs', 'trapezius', 'upper-back', 'hamstring', 'adductors', 'lower-back'], { strength: true }),
@@ -69,9 +81,11 @@ export const MOVEMENTS = [
     ['quadriceps', 'gluteal', 'calves'], ['hamstring', 'abs']),
   m('step-up', 'Box step-up', /step.?ups?|subidas? (al|a) (cajon|banco)/, 'upper legs',
     ['quadriceps', 'gluteal'], ['hamstring', 'calves', 'abs']),
+  m('single-leg-rdl', 'Single-leg deadlift', /single.?leg (rdl|deadlift|romanian)|one.?leg (rdl|deadlift)|peso muerto (a )?(una|1) pierna|unilateral (rdl|deadlift)/, 'upper legs',
+    ['hamstring', 'gluteal'], ['lower-back', 'forearm', 'abs', 'adductors'], { strength: true }),
   m('rdl', 'Romanian deadlift', /\brdl\b|romanian|peso muerto rumano/, 'upper legs',
     ['hamstring', 'gluteal'], ['lower-back', 'forearm', 'trapezius', 'adductors'], { strength: true }),
-  m('deadlift', 'Deadlift', /peso muerto|deadlift/, 'full body',
+  m('deadlift', 'Deadlift', /peso muerto|deadlift|\bdl\b/, 'full body',
     ['hamstring', 'gluteal', 'lower-back'], ['quadriceps', 'upper-back', 'trapezius', 'forearm', 'abs'], { lib: ['barbell deadlift'], strength: true }),
   m('hip-thrust', 'Hip thrust', /hip thrust|empuje de cadera|puente de gluteo|glute bridge/, 'upper legs',
     ['gluteal'], ['hamstring', 'quadriceps', 'adductors', 'abs', 'lower-back']),
@@ -99,6 +113,8 @@ export const MOVEMENTS = [
     ['upper-back', 'triceps'], ['chest', 'biceps', 'deltoids', 'abs', 'forearm']),
   m('toes-to-bar', 'Toes to bar', /toes?.?to.?bar|\bt2b\b|\bttb\b|knees?.?to.?(elbows?|chest)|\bk2e\b|rodillas (al|a) (codo|pecho)|pies a barra|puntas a barra/, 'waist',
     ['abs', 'hip-flexors'], ['upper-back', 'forearm', 'obliques', 'deltoids']),
+  m('scap-pullup', 'Scapular pull-up', /scap(ular)? pull|scapular|dominadas? escapulares?/, 'back',
+    ['trapezius'], ['upper-back']),
   m('pull-up', 'Pull-up', /pull.?ups?|dominadas?|chin.?ups?|\bc2b\b|chest.?to.?bar|pecho a barra|butterfly|kipping/, 'back',
     ['upper-back'], ['biceps', 'forearm', 'trapezius', 'deltoids', 'abs'], { lib: ['pull-up'] }),
   m('rope-climb', 'Rope climb', /rope climb|trepa|subida de cuerda/, 'back',
@@ -110,11 +126,13 @@ export const MOVEMENTS = [
   // Rowing erg after the strength rows: a bare "row" or "remo" in a WOD means the machine.
   m('rower', 'Rowing machine', /\brow(ing)?\b|\bremo\b|\bremar\b/, 'cardio',
     [CV], ['upper-back', 'quadriceps', 'hamstring', 'gluteal', 'lower-back', 'biceps', 'abs'], { mode: 'cardio', minPerKm: 4 }),
-  m('run', 'Run', /\brun\b|\brunning\b|\bcarrera\b|\bcorrer\b|\btrote\b|\bsprint\b|\bjog/, 'cardio',
+  m('run', 'Run', /\brun\b|\brunning\b|\bcarrera\b|\bcorrer\b|\btrote\b|\bsprint\b|\bjog|fartl[ec]*k/, 'cardio',
     [CV], ['quadriceps', 'hamstring', 'gluteal', 'calves', 'tibialis', 'hip-flexors'], { mode: 'cardio', minPerKm: 5.5 }),
+  m('cardio-machine', 'Cardio machine (cal)', /(^|\s)\d+\s*cals?\b|any cardio|cardio mach/, 'cardio',
+    [CV], ['quadriceps', 'hamstring', 'gluteal'], { mode: 'cardio', minPerKm: 4.5 }),
 
   // ---- Core and accessories ----
-  m('sit-up', 'Sit-up', /sit.?ups?|abdominales|crunch|ghd sit/, 'waist',
+  m('sit-up', 'Sit-up', /sit[\s-]*ups?|abdominales|crunch|ghd sit/, 'waist',
     ['abs'], ['hip-flexors', 'obliques']),
   m('plank', 'Plank / hollow / L-sit', /v.?ups?|hollow|plancha|plank|l.?sit|dead bug/, 'waist',
     ['abs'], ['hip-flexors', 'obliques', 'serratus'], { mode: 'time' }),
@@ -125,13 +143,13 @@ export const MOVEMENTS = [
   m('medball-slam', 'Ball slam', /slam ?balls?|ball slams?|lanzamiento al suelo/, 'full body',
     ['abs', 'deltoids'], ['upper-back', 'triceps', 'quadriceps', 'gluteal']),
   m('curl', 'Curl', /\bcurl/, 'upper arms', ['biceps'], ['forearm']),
-  m('triceps-ext', 'Triceps extension', /tricep|skull|pushdown/, 'upper arms', ['triceps'], ['forearm']),
+  m('triceps-ext', 'Triceps extension', /tricep|skull|pushdown|press frances|french press/, 'upper arms', ['triceps'], ['forearm']),
   m('lateral-raise', 'Lateral raise / face pull', /lateral raise|elevaciones laterales|face pull|rear delt|pajaros/, 'shoulders',
     ['deltoids'], ['trapezius', 'upper-back']),
 ]
 
 // Lines of a WOD that are not work: warm-ups, rests, notes.
-const SKIP = /calentamiento|warm.?up|movilidad|mobility|estiramiento|stretch|descanso|\brest\b|cool.?down|vuelta a la calma|^notas?:|^coach/
+const SKIP = /calentamiento|warm.?up|movilidad|mobility|estiramiento|stretch|strech|inchworm|cat.?camel|pass.?through|cuba|walk ?outs?|hip opener|toe touch|talon gluteo|butt kicks?|rotacion torac|thoracic rot|world.?s greatest|\bpvc\b|descanso|\brest\b|cool.?down|vuelta a la calma|^notas?:|^coach/
 
 export const isSkippable = text => SKIP.test(norm(text))
 
@@ -157,10 +175,25 @@ export function readSegment(text) {
 
 /** Split a block's free text into candidate movement segments. */
 export function segmentsOf(text) {
-  return String(text ?? '')
-    .split(/\r?\n|;|\+|,|\s&\s|\sy\s/)
-    .map(s => s.trim())
-    .filter(Boolean)
+  const out = []
+  for (const line of String(text ?? '').split(/\r?\n/)) {
+    let depth = 0, cur = ''
+    const flush = () => { if (cur.trim()) out.push(cur.trim()); cur = '' }
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i], rest = line.slice(i)
+      if (ch === '(') depth++
+      else if (ch === ')') depth = Math.max(0, depth - 1)
+      if (depth === 0) {
+        if (ch === ';' || ch === '+') { flush(); continue }
+        if (ch === ',' && !/^,\d/.test(rest) ) { flush(); continue }           // "22,5" is a number
+        if (/^\s&\s/.test(rest) || /^\sy\s/.test(rest)) { flush(); i += rest.indexOf(' ', 1); continue }
+        if (ch === '/' && /^\/\s*\d+\s+[a-z]/i.test(rest)) { flush(); continue }   // "5 Bar Muscle Up/5 Burpee"
+      }
+      cur += ch
+    }
+    flush()
+  }
+  return out
 }
 
 /**

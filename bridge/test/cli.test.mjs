@@ -23,6 +23,13 @@ test('plan --demo shows the days, overlaps, objectives and a free-workout pick',
   for (const needle of ['TUE 6 Oct — Hyrox', 'WED 7 Oct — CrossFit', 'THU 8 Oct — Hyrox', 'OVERLAPS', 'OBJECTIVES', 'FREE WORKOUT', 'Recommended:', 'nothing saved']) assert.ok(out.includes(needle), needle)
 })
 
+test('times of day are real clock times, also for last Sunday\'s run and the 18:30 runs', () => {
+  const out = run('plan', '--demo')
+  assert.ok(!/ -\d+:\d\d/.test(out), 'no negative hours')
+  assert.match(out, /Sun 09:00 long run/)
+  assert.match(out, /Mon 18:30 easy run|Fri 18:30 easy run/)
+})
+
 test('plan --demo --skip thu / --select / --free / --no-free change what is analysed', () => {
   assert.ok(!run('plan', '--demo', '--skip', 'thu').includes('THU 8 Oct'))
   assert.ok(run('plan', '--demo', '--select', 'tue=hyrox').includes('from --select'))

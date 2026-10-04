@@ -2,7 +2,8 @@ import { DAY_LONG, prettyDate } from './util.mjs'
 import { labelOf } from './analyze.mjs'
 
 const top = (load, n = 6) => Object.entries(load).sort((a, b) => b[1] - a[1]).slice(0, n).map(([k, v]) => `${k} ${v}`).join(' · ')
-const when = s => `${DAY_LONG[s.day]} ${String(Math.floor(s.t % 24)).padStart(2, '0')}:00`
+const clock = t => { const h = ((t % 24) + 24) % 24, hh = Math.floor(h), mm = Math.round((h - hh) * 60); return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}` }
+const when = s => `${DAY_LONG[s.day]} ${clock(s.t)}`
 const tag = s => s.kind === 'class' ? (s.cls === 'hyrox' ? 'Hyrox' : 'CrossFit') : s.kind === 'free' ? 'free workout' : s.name
 
 export function renderPlan({ weekOf, selection, selectionNote, resolved, built, analysis, freeRec, freeChoice, menu, targets, unreadable }) {

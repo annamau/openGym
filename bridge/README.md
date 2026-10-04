@@ -22,8 +22,9 @@ cd bridge
 **1. fetch** logs into Aimharder as you (email + password typed in the terminal, password hidden,
 never saved), reads the workouts your gym has published, and saves them to `out/week-raw.json`
 with email/phone/token-like fields removed. It then prints one line per date, e.g.
-`2026-10-06: hyrox “Hyrox Engine” [9101] 4 ex | crossfit [9102] 3 ex`, so you can see at once whether
-it found and labelled the right classes. It only reads. It never books or changes anything.
+`2026-10-06: hyrox [9101] 9 ex  |  crossfit [9102] 6 ex`, so you can see at once whether
+it found and labelled the right classes. A publication is the Hyrox class when one of its blocks says just
+“HYROX”; every other publication is the CrossFit class. It only reads. It never books or changes anything.
 You can also set `AIMHARDER_USER` and `AIMHARDER_PASSWORD` in the terminal instead of being asked.
 
 **2. plan** works offline from that file. For the week starting next Monday (on a weekend; otherwise
@@ -102,8 +103,8 @@ only as “optional” suggestions.
 ## When something is not found
 
 - **NOT FOUND for that date**: not published yet, or not on the first page of the gym's feed. Nothing is
-  assumed. If the same day shows other publications that are neither “Hyrox…” nor untitled, their titles
-  are printed so you can adjust `rules` in `config/selection.json`.
+  assumed. The Hyrox class is the publication with a “HYROX” block, the CrossFit class is the other one;
+  `rules` in `config/selection.json` change that (`crossfitIfNoMarker: false` shows unmarked ones as “unclear”).
 - **AMBIGUOUS**: more than one publication matched. Nothing is picked; use `--pick`.
 - **NOT recognised (not counted)**: movements it could not match. Send them over and they get added to
   `src/movements.mjs`.

@@ -11,6 +11,26 @@ const MONTHS = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 
 const LOAD_UNITS = ['kg', 'lbs', 'pood', '%BW', '%RM', 'RIR', 'RPE']
 const DIST_UNITS = ['m', 'mi', 'yd', 'ft', 'steps', 'km']
 
+const ENTITIES = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' }
+
+/**
+ * Aimharder stores workout text as HTML (<br />, &#039;, curly quotes). Everything downstream works on
+ * plain text with one line per line.
+ */
+export function plain(value) {
+  return String(value ?? '')
+    .replace(/<\s*br\s*\/?>|<\/\s*(?:p|div|li)\s*>/gi, '\n')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&#x([0-9a-f]{1,6});/gi, (_, h) => safeChar(parseInt(h, 16)))
+    .replace(/&#(\d{1,7});/g, (_, d) => safeChar(Number(d)))
+    .replace(/&([a-z]+);/gi, (m, n) => ENTITIES[n.toLowerCase()] ?? m)
+    .replace(/[\u2018\u2019\u00B4]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[ \t\u00A0]+/g, ' ')
+    .split('\n').map(l => l.trim()).filter(Boolean).join('\n')
+}
+const safeChar = n => (Number.isInteger(n) && n > 0 && n <= 0x10ffff ? String.fromCodePoint(n) : '')
+
 /** "14 de Octubre de 2026" -> "2026-10-14"; null when it is not that format. */
 export function parseRecordDate(text) {
   const m = /^(\d{1,2}) de ([a-z]+) de (\d{4})$/.exec(norm(text))
@@ -32,8 +52,13 @@ function projectExercise(e) {
   const first = (Array.isArray(e.valor1) ? e.valor1 : []).map(num).filter(v => v != null)
   const loadVal = [e.valor2, e.valor2h, e.valor2m].map(num).find(v => v != null) ?? null
   const loadRaw = form === 4 ? e.tipoud : form === 6 ? e.tipoud2 : undefined
+  const rawLoad = e.valor2 == null ? '' : String(e.valor2).trim()
   const out = {
-    name: String(e.ejerName ?? '').trim(),
+    name: plain(e.ejerName),
+    nom: plain(e.tWODnom) || null,       // the block's format name in Aimharder ("Rounds For Time", "EMOM", ...)
+    round: num(e.round),
+    repeat: num(e.roundrepeat),          // EMOM: number of rounds; "Time Stations": seconds per station
+    loadText: rawLoad || null,           // kept verbatim: "20/15" (men/women) is not a number
     sourceId: Number.isSafeInteger(num(e.ejerId)) && num(e.ejerId) > 0 ? num(e.ejerId) : null,
     blockIndex: Number.isInteger(num(e.tipoWOD)) ? num(e.tipoWOD) : null,
     values: first,                      // every number in valor1 (can be a per-round list)
@@ -69,7 +94,8 @@ export function normalizeWorkout(post, detail) {
     index,
     deleted: isTrue(b?.deleted),
     title: String(b?.title ?? postBlocks[index]?.title ?? '').trim() || null,
-    notes: b?.notes == null ? null : String(b.notes),
+    notes: b?.notes == null ? null : plain(b.notes),
+    section: num(b?.sstipo),             // 0 = workout, 1 = strength, 2 = warm-up (as seen in the gym's data)
     type: b?.type ?? null,
     timecap: num(b?.timecap),
     timecapType: b?.timecaptype ?? null,
@@ -98,19 +124,20 @@ export function normalizeWorkout(post, detail) {
 }
 
 export const DEFAULT_RULES = {
-  // A post whose title starts with this is the Hyrox class...
-  hyroxTitle: '^\\s*hyrox',
-  // ...a post with no title at all is the CrossFit class.
-  crossfitIfUntitled: true,
+  // A publication is the Hyrox class when one of its blocks starts with this text. In this gym's data
+  // the Hyrox publication has a first block that just says "HYROX". A title starting with it counts too.
+  hyroxText: '^\\s*hyrox',
+  // Any other publication is the CrossFit class. Set to false to see them as "unclear" instead.
+  crossfitIfNoMarker: true,
 }
 
-/** 'hyrox' | 'crossfit' | 'unclear' — never a guess: anything else is surfaced for a human. */
+/** 'hyrox' | 'crossfit' | 'unclear'. Two publications of the same class on one day are surfaced by the caller, never guessed. */
 export function classify(workout, rules = DEFAULT_RULES) {
-  const re = new RegExp(rules.hyroxTitle, 'i')
+  const re = new RegExp(rules.hyroxText ?? rules.hyroxTitle ?? DEFAULT_RULES.hyroxText, 'i')
+  if ((workout.blocks ?? []).some(b => re.test(norm(b.notes ?? '')))) return 'hyrox'
   if (workout.titles.some(t => re.test(norm(t)))) return 'hyrox'
   if (re.test(norm(workout.wodClass ?? ''))) return 'hyrox'
-  if (rules.crossfitIfUntitled && workout.titles.length === 0) return 'crossfit'
-  return 'unclear'
+  return (rules.crossfitIfNoMarker ?? rules.crossfitIfUntitled ?? true) ? 'crossfit' : 'unclear'
 }
 
 /** Key names (no values) seen in the raw responses: shows what else Aimharder sends. */

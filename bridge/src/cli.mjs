@@ -23,7 +23,7 @@ import { ask } from './prompt.mjs'
 import { DAYS, addDays, mondayOf, todayIso, weekdayOf, prettyDate } from './util.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
-const P = (...a) => path.join(ROOT, ...a)
+const P = (...a) => path.resolve(ROOT, ...a)   // an absolute path (e.g. --out) is used as given
 const readJson = f => JSON.parse(fs.readFileSync(f, 'utf8'))
 const writeJson = (f, v) => { fs.mkdirSync(path.dirname(f), { recursive: true }); fs.writeFileSync(f, JSON.stringify(v, null, 2)) }
 
@@ -90,7 +90,7 @@ async function cmdFetch(o) {
   const { workouts, unreadable } = readWorkouts(file)
   console.log(`Gym: ${result.gym.name}. ${result.items.length} workout publications read (feed had ${result.feedSize}).`)
   const byDate = {}
-  for (const w of workouts) (byDate[w.date] ||= []).push(`${classify(w, sel.rules || DEFAULT_RULES)}${w.titles.length ? ` “${w.titles.join(' / ')}”` : ''} [${w.sourceId}] ${w.exercises.length} ex`)
+  for (const w of workouts) (byDate[w.date] ||= []).push(`${classify(w, sel.rules || DEFAULT_RULES)} [${w.sourceId}] ${w.exercises.length} ex`)
   for (const d of Object.keys(byDate).sort()) console.log(`  ${d}: ${byDate[d].join('  |  ')}`)
   if (unreadable.length) console.log(`  could not read ${unreadable.length}: ${[...new Set(unreadable)].join('; ')}`)
   console.log(`\nSaved ${path.relative(process.cwd(), file)} (email/phone/token-like fields removed). Open it once if you want to check before sharing it.`)

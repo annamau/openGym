@@ -1,6 +1,6 @@
 // Synthetic Aimharder publications (NOT real data): the field names follow what the real API returns,
-// the workout text is invented. Two publications per day: an untitled CrossFit one and one whose
-// title starts with "Hyrox".
+// the workout text is invented. Two publications per day: a CrossFit one and a Hyrox one, which in
+// this gym's data starts with a block whose notes are just "HYROX".
 
 const MONTHS = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
 const spanish = iso => { const [y, m, d] = iso.split('-').map(Number); return `${d} de ${MONTHS[m - 1]} de ${y}` }
@@ -10,13 +10,14 @@ export function pub({ id, date, wodClass = 'WOD', blocks, ejer = [] }) {
     post: { id, wodClass, TIPOWODs: blocks.map(b => ({ title: b.title ?? '' })) },
     detail: {
       recordDate: spanish(date),
-      TIPOWODs: blocks.map(b => ({ title: b.title ?? '', notes: b.notes ?? '', deleted: '0', rondas: b.rondas ?? null, timecap: b.timecap ?? null })),
+      TIPOWODs: blocks.map(b => ({ title: b.title ?? '', notes: b.notes ?? '', deleted: '0', rondas: b.rondas ?? null, timecap: b.timecap ?? null, sstipo: b.section ?? 0 })),
       ejerRate: ejer,
     },
   }
 }
 
 export const hyroxTue = pub({ id: 9101, date: '2026-10-06', wodClass: 'Hyrox', blocks: [
+  { notes: 'HYROX' },
   { title: 'Hyrox Calentamiento', notes: '2 rondas: 200m Run, 10 Air Squat, 10 Walking Lunge' },
   { title: 'Hyrox Engine', notes: '5 rondas\n600m Run\n25m Sled Push\n25m Sled Pull\n20 Wall Ball' },
 ] })
@@ -29,10 +30,12 @@ export const crossfitWed = pub({ id: 9201, date: '2026-10-07', blocks: [
   { notes: 'For time (cap 12)\n21-15-9\nThruster (43/30 kg)\nPull-ups\nTime cap 12' },
 ] })
 export const hyroxWed = pub({ id: 9202, date: '2026-10-07', wodClass: 'Hyrox', blocks: [
+  { notes: 'HYROX' },
   { title: 'Hyrox Strength', notes: '4x10 Bench Press' },
 ] })
 
 export const hyroxThu = pub({ id: 9301, date: '2026-10-08', wodClass: 'Hyrox', blocks: [
+  { notes: 'HYROX' },
   { title: 'Hyrox Race Sim', notes: 'AMRAP 30\n500m Run\n15 Burpee Broad Jump\n100m Farmers Carry\n12 Sandbag Lunges\n300m SkiErg' },
 ] })
 export const crossfitThu = pub({ id: 9302, date: '2026-10-08', blocks: [
@@ -44,6 +47,32 @@ export const crossfitThu = pub({ id: 9302, date: '2026-10-08', blocks: [
 export const structured = pub({ id: 9401, date: '2026-10-07', blocks: [{ notes: 'For time 21-15-9' }], ejer: [
   { ejerName: 'Thruster', ejerId: 1, tipoWOD: 0, formaReg: 4, valor1: [21, 15, 9], valor2: 43, tipoud: 0 },
   { ejerName: 'Pull-up', ejerId: 2, tipoWOD: 0, formaReg: 3, valor1: [21, 15, 9] },
+] })
+
+// Real shape (invented content): HTML in the notes, a "HYROX" marker block, a warm-up section (sstipo 2),
+// values as strings, format names in tWODnom, EMOM rounds in roundrepeat, a pair load "20/15", %RM, a unit in the name.
+const ex = (name, tipoWOD, nom, extra = {}) => ({ ejerName: name, tipoWOD, tWODnom: nom, formaReg: '3', valor1: ['10'], ...extra })
+export const realShape = (timecap = 3) => pub({ id: 9501, date: '2026-10-07', blocks: [
+  { notes: 'HYROX' },
+  { title: '3 RFT', section: 2, notes: '' },
+  { title: '3 RFT', notes: '', timecap },
+  { title: 'EMOM', notes: 'Cada minuto &#039;ritmo fuerte&#039;<br />sin parar' },
+  { title: 'Estaciones', notes: '' },
+  { title: 'OPEN', section: 1, notes: 'EMPEZAMOS EN 50%' },
+  { title: 'For time', notes: '' },
+], ejer: [
+  ex('Descanso Rest', 0, 'Texto libre', { formaReg: '1', valor1: ['0'] }),
+  ex('Air Squat', 1, 'Rounds For Time', { valor1: ['12'] }),
+  ex('Row (m)', 2, 'Rounds For Time', { valor1: ['250'] }),
+  ex('Double DB Thruster', 2, 'Rounds For Time', { valor1: ['20'], valor2: '20/15' }),
+  ex('Scapular Pull up', 2, 'Rounds For Time', { valor1: ['10'] }),
+  ex('Farmer&#039;s Carry', 2, 'Rounds For Time', { formaReg: '2', valor1: ['40'], tipoud: '0' }),
+  ex('Back Squat', 3, 'EMOM', { formaReg: '4', valor1: ['12'], valor2: '60', tipoud: '4', round: '1', roundrepeat: '5' }),
+  ex('Burpee', 3, 'EMOM', { valor1: ['10'], round: '1', roundrepeat: '5' }),
+  ex('SkiErg', 4, 'Time Stations', { valor1: ['0'], round: '2', roundrepeat: '45' }),
+  ex('Push Press', 5, 'Libre', { valor1: ['3', '3', '3', '3', '3'] }),
+  ex('Kettlebell Sumo Deadlift High Pull', 6, 'For time', { valor1: ['21', '15', '9'] }),
+  ex('Burpee', 6, 'For time', { valor1: ['21', '15', '9'] }),
 ] })
 
 export const week = [hyroxTue, crossfitTue, crossfitWed, hyroxWed, hyroxThu, crossfitThu]

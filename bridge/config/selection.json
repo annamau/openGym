@@ -8,5 +8,5 @@
     "upper": { "file": "upper.txt", "example": "upper.example.txt", "name": "Upper body (free)", "emoji": "pullup" },
     "legs": { "file": "legs.txt", "example": "legs.example.txt", "name": "Legs quick (free)", "emoji": "legs" }
   },
-  "rules": { "hyroxTitle": "^\\s*hyrox", "crossfitIfUntitled": true }
+  "rules": { "hyroxText": "^\\s*hyrox", "crossfitIfNoMarker": true }
 }

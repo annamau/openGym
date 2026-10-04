@@ -1,10 +1,10 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { normalizeWorkout } from '../src/parse.mjs'
-import { buildRoutine, parseFormat, isFormatLine, loadHint } from '../src/routine.mjs'
-import { matchMovement, readSegment } from '../src/movements.mjs'
+import { buildRoutine, parseFormat, isFormatLine, loadHint, textSections, emomShape } from '../src/routine.mjs'
+import { matchMovement, readSegment, segmentsOf, isSkippable } from '../src/movements.mjs'
 import { catalogue, loadOf } from '../src/appbridge.mjs'
-import { hyroxTue, crossfitTue, crossfitWed, hyroxThu, crossfitThu, structured, pub } from './fixtures/week.mjs'
+import { hyroxTue, crossfitTue, crossfitWed, hyroxThu, crossfitThu, structured, realShape, pub } from './fixtures/week.mjs'
 
 const build = (p, cls) => buildRoutine(normalizeWorkout(p.post, p.detail).workout, cls, { catalogue })
 const byId = (r, id) => r.routine.ex.find(e => e.id === id)
@@ -127,4 +127,134 @@ test('the app\'s own muscle maths sees the built routine', () => {
 
 test('building the same workout twice gives the same routine (stable ids, safe to re-apply)', () => {
   assert.deepEqual(build(hyroxTue, 'hyrox').routine, build(hyroxTue, 'hyrox').routine)
+})
+
+// ---- the real shape: structured exercises, format names, warm-up section, pair loads ----
+
+test('real shape: warm-up section, the HYROX marker and free-text rest rows are not counted', () => {
+  const b = build(realShape(), 'hyrox')
+  assert.deepEqual(b.skippedBlocks, ['3 RFT'])                    // the sstipo-2 block
+  assert.ok(!b.movements.some(m => /air squat|descanso/i.test(m.text)))
+  assert.deepEqual(b.unresolved, [])
+})
+
+test('real shape: the numeric timecap field is ignored (its meaning is a code, not minutes)', () => {
+  const a = build(realShape(3), 'hyrox'), c = build(realShape(60), 'hyrox')
+  assert.deepEqual(a.routine, c.routine)
+  assert.deepEqual(a.effort, c.effort)
+})
+
+test('real shape: "3 RFT" gives the rounds, and pair loads / %RM stay in the note, never in the weight', () => {
+  const b = build(realShape(), 'hyrox')
+  const thruster = b.routine.ex.find(e => e.sets === 3 && /20\/15/.test(e.note))
+  assert.ok(thruster, 'double DB thruster: 3 rounds, "20/15" kept as text')
+  assert.equal(thruster.weight, 0)
+  const squat = byId(b, '0043')
+  assert.equal(squat.sets, 5)                                      // EMOM roundrepeat
+  assert.equal(squat.reps, 12)
+  assert.equal(squat.weight, 0)
+  assert.match(squat.note, /60 %RM/)
+})
+
+test('real shape: a unit in the name ("Row (m)") makes it a distance, so a cardio entry', () => {
+  const b = build(realShape(), 'hyrox')
+  const row = b.routine.ex.find(e => e.mode === 'cardio' && /rower|row/i.test(e.id))
+  assert.ok(row, 'row is cardio')
+  assert.ok(row.min > 0 && row.min < 3, `250 m of rowing is about a minute, got ${row.min}`)
+})
+
+test('real shape: EMOM minutes are rounds × movements and are counted once for the block', () => {
+  const b = build(realShape(), 'hyrox')
+  const emom = build(pub({ id: 1, date: '2026-10-07', blocks: [{ title: 'EMOM', notes: '' }], ejer: [
+    { ejerName: 'Back Squat', tipoWOD: 0, tWODnom: 'EMOM', formaReg: '3', valor1: ['10'], roundrepeat: '6' },
+    { ejerName: 'Burpee', tipoWOD: 0, tWODnom: 'EMOM', formaReg: '3', valor1: ['10'], roundrepeat: '6' },
+  ] }), 'crossfit')
+  assert.equal(emom.effort.condMinutes, 12)
+  assert.deepEqual(emom.routine.ex.map(e => e.sets), [6, 6])
+  assert.ok(b.effort.condMinutes > 0)
+})
+
+test('real shape: time stations are timed rows (seconds per station), rounds from "round"', () => {
+  const b = build(realShape(), 'hyrox')
+  const ski = b.routine.ex.find(e => /skierg|ski/i.test(e.id))
+  assert.equal(ski.mode, 'cardio')
+  assert.equal(ski.sets, 2)
+  assert.ok(Math.abs(ski.min - 0.75) < 0.1)
+})
+
+test('real shape: a value list is the set list (OPEN 3,3,3,3,3 → 5×3); ladders keep the sum of reps', () => {
+  const b = build(realShape(), 'hyrox')
+  const press = b.routine.ex.find(e => /push-press/.test(e.id))
+  assert.equal(press.sets, 5)
+  assert.equal(press.reps, 3)
+  assert.match(press.note, /EMPEZAMOS EN 50%/)
+  const sdhp = b.routine.ex.find(e => /sdhp/.test(e.id))
+  assert.equal(sdhp.sets, 3)
+  assert.equal(sdhp.reps, 15)                                       // 21+15+9 = 45 = 3 × 15
+  assert.match(sdhp.note, /reps 21-15-9/)
+})
+
+test('real shape: the same movement in two blocks becomes one row whose sets × reps is the total', () => {
+  const b = build(realShape(), 'hyrox')
+  const burpee = b.routine.ex.find(e => /burpee/.test(e.id))
+  assert.equal(burpee.sets, 8)                                      // 5 EMOM + 3 ladder
+  assert.equal(burpee.reps, 12)                                     // (5×10 + 3×15) / 8 ≈ 11.9
+  assert.equal(b.routine.ex.filter(e => /burpee/.test(e.id)).length, 1)
+})
+
+test('real shape: names are decoded before matching, and a scapular pull-up is not a pull-up', () => {
+  const b = build(realShape(), 'hyrox')
+  assert.ok(b.movements.some(m => m.movement === 'Farmers carry'), "Farmer&#039;s Carry decodes to Farmer's Carry")
+  assert.ok(b.movements.some(m => m.movement === 'Scapular pull-up'))
+  assert.ok(!b.movements.some(m => m.movement === 'Pull-up'))
+})
+
+test('real shape: block notes the coach wrote travel into the routine once per block', () => {
+  const b = build(realShape(), 'hyrox')
+  const notes = b.routine.ex.map(e => e.note || '').join(' ')
+  assert.equal((notes.match(/ritmo fuerte/g) || []).length, 1)      // on the first movement of the EMOM block only
+  assert.match(byId(b, '0043').note, /Cada minuto 'ritmo fuerte' \/ sin parar/)
+})
+
+// ---- free text with several formats in one block (Saturday partner workouts are published like this) ----
+
+test('free text: each header (rounds, ladder, EMOM) applies to the movements under it, not to the whole block', () => {
+  const sec = textSections('Partners fts\n10 Rounds For Time\n10 Hang Power Clean (40/30)\n10 Pull Ups\n5 Rounds For Time\n5 Bar Muscle Up/5 Burpee\n*tras cada serie subir carga')
+  assert.deepEqual(sec.map(x => [x.fmt.kind, x.fmt.rounds, x.segs.length]), [['rounds', 10, 2], ['rounds', 5, 2]])
+  const b = build(pub({ id: 1, date: '2026-10-07', blocks: [{ notes: '10 Rounds For Time\n10 Hang Power Clean (40/30)\n10 Pull Ups\n5 Rounds For Time\n5 Bar Muscle Up/5 Burpee' }] }), 'crossfit')
+  const sets = Object.fromEntries(b.movements.map(m => [m.movement, m.sets]))
+  assert.deepEqual(sets, { Clean: 10, 'Pull-up': 10, 'Muscle-up': 5, Burpee: 5 })
+})
+
+test('free text: a strength line keeps its own NxM; coach remarks are not movements', () => {
+  const sec = textSections('5x5 Back Squat\n3 rondas\n10 Push-up\n(escalar si hace falta)')
+  assert.deepEqual(sec.map(x => [x.fmt.kind, x.segs.length]), [['strength', 1], ['rounds', 1]])
+})
+
+test('segments: commas inside parentheses and decimals stay together; "5 X/5 Y" splits', () => {
+  assert.deepEqual(segmentsOf('Db snatch (22,5/15)'), ['Db snatch (22,5/15)'])
+  assert.deepEqual(segmentsOf('5 Bar Muscle Up/5 Burpee Chest To Bar'), ['5 Bar Muscle Up', '5 Burpee Chest To Bar'])
+  assert.deepEqual(segmentsOf('200m Run, 10 Air Squat\n12 Cal Row'), ['200m Run', '10 Air Squat', '12 Cal Row'])
+  assert.deepEqual(segmentsOf('Thruster (43/30 kg)'), ['Thruster (43/30 kg)'])
+})
+
+test('EMOM repeat: rounds normally; read as total minutes when that would be an impossible block', () => {
+  assert.deepEqual(emomShape(5, 3), { rounds: 5, minutes: 15, asMinutes: false })
+  assert.deepEqual(emomShape(40, 4), { rounds: 10, minutes: 40, asMinutes: true })
+  assert.deepEqual(emomShape(25, 5), { rounds: 5, minutes: 25, asMinutes: true })
+  assert.deepEqual(emomShape(20, 1), { rounds: 20, minutes: 20, asMinutes: false })
+})
+
+test('dictionary: movements seen in the gym\'s real programming resolve (and drills do not count)', () => {
+  for (const [text, key] of [
+    ['KB SINGLE LEG DEADLIFT', 'single-leg-rdl'], ['Scapular Pull up', 'scap-pullup'], ['active bar hang', 'active-hang'],
+    ['DOUBLE DB DL', 'deadlift'], ['Double DB hang C&J', 'clean'], ['Sit -ups.', 'sit-up'], ['Heel Drops', 'calf-raise'],
+    ['FARTLECK', 'run'], ['40 cals a repartir', 'cardio-machine'], ['Echo Bike (Cal)', 'bike'], ['12 Cal Row', 'rower'],
+    ['Strict Chin-ups', 'pull-up'], ['SHOULDER TAPS', 'shoulder-taps'], ['Mountain Climbers', 'mountain-climber'],
+  ]) assert.equal(matchMovement(text)?.key, key, text)
+  for (const drill of ['Rotación torácica', "World's greatest strech", 'Walkout', 'Hip Opener', '20m Talon gluteo']) assert.ok(isSkippable(drill), drill)
+})
+
+test('format-looking lines are not reported as unrecognised movements', () => {
+  for (const line of ["Del 0' al 10':", 'Evento 2: 21-15-9 (TC 10\')', 'Por Parejas:', '*Cambio cada 2\'30"', '2 min ON/1 min Off x 3', 'METCON']) assert.ok(isFormatLine(line), line)
 })
