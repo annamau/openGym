@@ -1,7 +1,7 @@
 // Which classes you attend this week, and which published workout belongs to each.
 
-import { DAYS, addDays } from './util.mjs'
-import { classify } from './parse.mjs'
+import { DAYS, addDays, weekdayOf } from './util.mjs'
+import { classify, normalizeWorkout } from './parse.mjs'
 
 /** Monday-first: { mon: '2026-10-05', ... } for the week starting on `mondayIso`. */
 export function weekDates(mondayIso) {
@@ -47,4 +47,23 @@ export function resolveWeek(workouts, selection, dates, rules) {
     const unclear = same.filter(w => classify(w, rules) === 'unclear')
     return { day, date, cls, status: 'missing', unclear }
   })
+}
+
+/** Is this publication one of the classes you attend? Judged by its weekday and its class, whatever the week. */
+export function isSelected(workout, selection, rules) {
+  const day = DAYS[(weekdayOf(workout.date) + 6) % 7]
+  return selection[day] != null && selection[day] === classify(workout, rules)
+}
+
+/**
+ * Keep only the raw publications ({post, detail}) of selected classes. Everything else, including
+ * publications that cannot be read, is dropped, so nothing about days or classes you do not attend is stored.
+ */
+export function pruneItems(items, selection, rules) {
+  const kept = []
+  for (const it of items || []) {
+    const n = normalizeWorkout(it?.post, it?.detail)
+    if (n.ok && isSelected(n.workout, selection, rules)) kept.push(it)
+  }
+  return { kept, dropped: (items || []).length - kept.length }
 }

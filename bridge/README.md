@@ -27,10 +27,16 @@ it found and labelled the right classes. A publication is the Hyrox class when o
 “HYROX”; every other publication is the CrossFit class. It only reads. It never books or changes anything.
 You can also set `AIMHARDER_USER` and `AIMHARDER_PASSWORD` in the terminal instead of being asked.
 
+Only the classes you selected are kept: the fetch drops every other publication (other days, the class
+you do not attend) before anything is written to disk, and says how many it dropped. If you change your
+selection, run `fetch` again. `node src/cli.mjs clean` does the same to an existing `out/week-raw.json`.
+
 **2. plan** works offline from that file. For the week starting next Monday (on a weekend; otherwise
 this Monday) it prints, per class day, a one-line summary (“legs + cardio”), the muscles hit, what it
 could not recognise, the overlaps between sessions, how far each objective is from its weekly target,
-and the free-workout recommendation with the numbers behind it. It saves `out/proposal.json`.
+and the free-workout recommendation with the numbers behind it. For each class it also lists the exercises
+of the routine that `apply` would create. It saves the report as `out/plan.txt` (open it in VS Code) and
+the routines as `out/proposal.json`. Both stay on your computer: `out/` is git-ignored.
 Nothing is sent anywhere.
 
 Useful options:

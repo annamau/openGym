@@ -6,7 +6,13 @@ const clock = t => { const h = ((t % 24) + 24) % 24, hh = Math.floor(h), mm = Ma
 const when = s => `${DAY_LONG[s.day]} ${clock(s.t)}`
 const tag = s => s.kind === 'class' ? (s.cls === 'hyrox' ? 'Hyrox' : 'CrossFit') : s.kind === 'free' ? 'free workout' : s.name
 
-export function renderPlan({ weekOf, selection, selectionNote, resolved, built, analysis, freeRec, freeChoice, menu, targets, unreadable }) {
+/** One line per exercise of a routine, the way it will appear in openGym. */
+export function describeExercise(e, name) {
+  const what = e.mode === 'cardio' ? `${e.sets}× ${e.min} min` : e.mode === 'time' ? `${e.sets}× ${e.sec} s` : `${e.sets}×${e.reps}`
+  return `${name} ${what}${e.weight ? ` @ ${e.weight} kg` : ''}${e.note ? `   (${e.note})` : ''}`
+}
+
+export function renderPlan({ weekOf, selection, selectionNote, resolved, built, analysis, freeRec, freeChoice, menu, targets, unreadable, nameOf = id => id }) {
   const L = []
   L.push(`WEEK OF ${DAY_LONG.mon} ${prettyDate(weekOf)}`)
   L.push(`Classes: ${Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(' · ') || 'none'}  (${selectionNote})`)
@@ -16,7 +22,7 @@ export function renderPlan({ weekOf, selection, selectionNote, resolved, built, 
   for (const r of resolved) {
     const head = `${DAY_LONG[r.day].toUpperCase()} ${prettyDate(r.date)} — ${r.cls === 'hyrox' ? 'Hyrox' : 'CrossFit'}`
     if (r.status === 'missing') {
-      L.push(`${head}: NOT FOUND for that date${r.unclear?.length ? ` (${r.unclear.length} publication(s) that day are neither "Hyrox…" nor untitled; titles: ${r.unclear.flatMap(u => u.titles).join(' | ') || 'n/a'})` : ' (not published yet?)'}`, '')
+      L.push(`${head}: NOT FOUND for that date${r.unclear?.length ? ` (${r.unclear.length} publication(s) that day have no HYROX block and "crossfitIfNoMarker" is off in config/selection.json)` : ' (not published yet?)'}`, '')
       continue
     }
     if (r.status === 'ambiguous') {
@@ -28,6 +34,9 @@ export function renderPlan({ weekOf, selection, selectionNote, resolved, built, 
     L.push(`${head}: ${s.summary}   [effort ~${s.rough}, rough estimate]`)
     L.push(`   Muscles (effective sets, the app's way of counting): ${top(s.load) || 'none recognised'}${s.cardio >= 1 ? ` · cardio ${s.cardio}` : ''}`)
     L.push(`   Recognised ${b.movements.length} movement(s); strength sets ${b.effort.strengthSets}, conditioning ~${b.effort.condMinutes} min`)
+    L.push(`   Routine "${b.routine.name}" (what apply would create in openGym):`)
+    for (const e of b.routine.ex) L.push(`      ${describeExercise(e, nameOf(e.id, b.customEx))}`)
+    if (b.skippedBlocks.length) L.push(`   Warm-up blocks left out: ${b.skippedBlocks.length}`)
     if (b.unresolved.length) L.push(`   NOT recognised (not counted): ${b.unresolved.join(' | ')}`)
     const approx = b.movements.filter(m => m.setsSource === 'amrap-estimate' || m.setsSource === 'default')
     if (approx.length) L.push(`   Set counts estimated for: ${[...new Set(approx.map(m => m.movement))].join(', ')}`)

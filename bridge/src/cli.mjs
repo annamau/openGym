@@ -1,8 +1,9 @@
 #!/usr/bin/env node
 // openGym bridge: Aimharder class workouts -> analysis -> openGym routines.
 //
-//   node src/cli.mjs fetch            read the published workouts (read-only) into out/week-raw.json
-//   node src/cli.mjs plan             analyse the week offline and propose the free workout
+//   node src/cli.mjs fetch            read the published workouts (read-only); keeps only the classes you selected
+//   node src/cli.mjs plan             analyse the week offline and propose the free workout (also saves out/plan.txt)
+//   node src/cli.mjs clean            delete everything in out/week-raw.json that is not a selected class
 //   node src/cli.mjs pair             store a token for your openGym (one-time code from Settings)
 //   node src/cli.mjs apply            show what would be written; add --yes to write it
 
@@ -12,7 +13,7 @@ import { fileURLToPath } from 'node:url'
 import { parseArgs } from 'node:util'
 import { AimharderClient, AimharderError } from './aimharder.mjs'
 import { normalizeWorkout, classify, DEFAULT_RULES } from './parse.mjs'
-import { weekDates, parseSelect, applySelection, resolveWeek } from './select.mjs'
+import { weekDates, parseSelect, applySelection, resolveWeek, pruneItems } from './select.mjs'
 import { buildRoutine } from './routine.mjs'
 import { catalogue } from './appbridge.mjs'
 import { analyzeWeek } from './analyze.mjs'
@@ -20,7 +21,7 @@ import { buildFreeMenu, recommendFree } from './free.mjs'
 import { renderPlan } from './report.mjs'
 import { OpenGymClient, OpenGymError, redeemPairingCode, saveToken, loadToken, syncToOpenGym } from './opengym.mjs'
 import { ask } from './prompt.mjs'
-import { DAYS, addDays, mondayOf, todayIso, weekdayOf, prettyDate } from './util.mjs'
+import { DAYS, DAY_LONG, addDays, mondayOf, todayIso, weekdayOf, prettyDate } from './util.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const P = (...a) => path.resolve(ROOT, ...a)   // an absolute path (e.g. --out) is used as given
@@ -51,7 +52,8 @@ const OPTIONS = {
 const HELP = `
 openGym bridge
 
-  fetch   [--domain aimharder.es] [--gym ID]      (reads whatever the gym has published; no week needed)
+  fetch   [--domain aimharder.es] [--gym ID] [--select ...]   (keeps only your selected classes; the rest is not saved)
+  clean   [--select ...]                         (deletes from out/week-raw.json everything that is not a selected class)
   plan    [--week-of YYYY-MM-DD] [--select tue=hyrox,wed=crossfit] [--skip thu] [--add fri=crossfit]
           [--pick wed=<publication id>] [--free upper|legs|none] [--last-free upper|legs] [--demo]
   pair    --url https://your-site.netlify.app [--code ABC123]
@@ -60,6 +62,17 @@ openGym bridge
 Credentials: AIMHARDER_USER / AIMHARDER_PASSWORD, or you are asked (the password is hidden).
 Nothing is written to openGym unless "apply" is run with --yes.
 `
+
+/** The classes you attend: the defaults, adjusted by --select / --skip / --add. */
+function selectionFrom(o, sel) {
+  const selection = applySelection(sel.defaults, {
+    select: o.select ? parseSelect(o.select) : undefined,
+    skip: o.skip ? o.skip.split(',').map(x => x.trim()) : [],
+    add: o.add ? parseSelect(o.add) : undefined,
+  })
+  const note = o.select ? 'from --select' : (o.skip || o.add) ? 'defaults adjusted by --skip/--add' : 'defaults'
+  return { selection, note }
+}
 
 function loadConfig() {
   return { sel: readJson(P('config', 'selection.json')), targets: readJson(P('config', 'targets.json')) }
@@ -85,15 +98,28 @@ async function cmdFetch(o) {
   })
   process.stderr.write('\n')
   const { sel } = loadConfig()
+  const { selection } = selectionFrom(o, sel)
   const file = P(o.out || 'out/week-raw.json')
-  writeJson(file, scrub({ fetchedAt: new Date().toISOString(), gym: result.gym, feedSize: result.feedSize, skippedNonWorkout: result.skippedNonWorkout, items: result.items, inventory: result.inventory }))
+  // Only the classes you attend are kept; the rest of the feed is never written to disk.
+  const { kept, dropped } = pruneItems(result.items, selection, sel.rules || DEFAULT_RULES)
+  writeJson(file, scrub({ fetchedAt: new Date().toISOString(), gym: result.gym, selection, items: kept }))
   const { workouts, unreadable } = readWorkouts(file)
   console.log(`Gym: ${result.gym.name}. ${result.items.length} workout publications read (feed had ${result.feedSize}).`)
-  const byDate = {}
-  for (const w of workouts) (byDate[w.date] ||= []).push(`${classify(w, sel.rules || DEFAULT_RULES)} [${w.sourceId}] ${w.exercises.length} ex`)
-  for (const d of Object.keys(byDate).sort()) console.log(`  ${d}: ${byDate[d].join('  |  ')}`)
+  console.log(`Kept ${kept.length}: only your selected classes (${Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(', ')}). The other ${dropped} were not saved.`)
+  for (const w of workouts.sort((a, b) => a.date.localeCompare(b.date))) console.log(`  ${w.date} ${DAY_LONG[DAYS[(weekdayOf(w.date) + 6) % 7]]}  ${classify(w, sel.rules || DEFAULT_RULES)} [${w.sourceId}] ${w.exercises.length} exercises`)
   if (unreadable.length) console.log(`  could not read ${unreadable.length}: ${[...new Set(unreadable)].join('; ')}`)
-  console.log(`\nSaved ${path.relative(process.cwd(), file)} (email/phone/token-like fields removed). Open it once if you want to check before sharing it.`)
+  console.log(`\nSaved ${path.relative(process.cwd(), file)} (email/phone/token-like fields removed). If you change the selection later, run fetch again.`)
+}
+
+function cmdClean(o) {
+  const { sel } = loadConfig()
+  const { selection } = selectionFrom(o, sel)
+  const file = P(o.out || 'out/week-raw.json')
+  if (!fs.existsSync(file)) return console.log('No week-raw.json to clean.')
+  const raw = readJson(file)
+  const { kept, dropped } = pruneItems(raw.items, selection, sel.rules || DEFAULT_RULES)
+  writeJson(file, scrub({ fetchedAt: raw.fetchedAt, gym: raw.gym, selection, items: kept }))
+  console.log(`Kept ${kept.length} publication(s) for ${Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(', ')}; deleted ${dropped} that were not selected.`)
 }
 
 function cmdPlan(o) {
@@ -106,12 +132,7 @@ function cmdPlan(o) {
   const dates = weekDates(weekOf)
   const datesList = DAYS.map(d => dates[d])
 
-  const selection = applySelection(sel.defaults, {
-    select: o.select ? parseSelect(o.select) : undefined,
-    skip: o.skip ? o.skip.split(',').map(s => s.trim()) : [],
-    add: o.add ? parseSelect(o.add) : undefined,
-  })
-  const selectionNote = o.select ? 'from --select' : (o.skip || o.add) ? 'defaults adjusted by --skip/--add' : 'defaults'
+  const { selection, note: selectionNote } = selectionFrom(o, sel)
 
   const picks = Object.fromEntries((o.pick || '').split(',').filter(Boolean).map(p => p.split('=').map(s => s.trim())))
   const resolved = resolveWeek(workouts, selection, dates, sel.rules || DEFAULT_RULES).map(r => {
@@ -145,7 +166,9 @@ function cmdPlan(o) {
     free: choice ? { date: freeDate, routine: menu[choice.key].routine, customEx: menu[choice.key].customEx } : null,
   })
 
-  console.log(renderPlan({ weekOf, selection, selectionNote, resolved, built, analysis: final, freeRec, freeChoice: choice, menu, targets, unreadable }))
+  const nameOf = (id, customEx) => customEx.find(c => c.id === id)?.n ?? catalogue.get(id)?.n ?? id
+  const text = renderPlan({ weekOf, selection, selectionNote, resolved, built, analysis: final, freeRec, freeChoice: choice, menu, targets, unreadable, nameOf })
+  console.log(text)
 
   const proposal = {
     createdAt: new Date().toISOString(), weekOf, selection,
@@ -153,7 +176,11 @@ function cmdPlan(o) {
     free: choice ? { key: choice.key, date: freeDate, routine: menu[choice.key].routine, customEx: menu[choice.key].customEx, options: freeRec.options.map(({ key, score, gain, penalty, rotation }) => ({ key, score, gain, penalty, rotation })) } : null,
     notFound: resolved.filter(r => r.status !== 'ok').map(r => ({ day: r.day, date: r.date, cls: r.cls, status: r.status })),
   }
-  if (!o.demo) { writeJson(P('out', 'proposal.json'), proposal); console.log('\nSaved out/proposal.json. Nothing has been sent to openGym.') }
+  if (!o.demo) {
+    writeJson(P('out', 'proposal.json'), proposal)
+    fs.writeFileSync(P('out', 'plan.txt'), text + '\n')
+    console.log('\nSaved out/plan.txt (this report, to read in VS Code) and out/proposal.json (what apply would write). Nothing has been sent to openGym.')
+  }
   else console.log('\n(demo: sample data, nothing saved)')
 }
 
@@ -198,7 +225,7 @@ async function main() {
   const { values: o, positionals } = parseArgs({ options: OPTIONS, allowPositionals: true })
   const cmd = positionals[0]
   if (!cmd || o.help) return console.log(HELP)
-  const fn = { fetch: cmdFetch, plan: cmdPlan, pair: cmdPair, apply: cmdApply }[cmd]
+  const fn = { fetch: cmdFetch, plan: cmdPlan, clean: cmdClean, pair: cmdPair, apply: cmdApply }[cmd]
   if (!fn) return console.log(`Unknown command "${cmd}".\n${HELP}`)
   await fn(o)
 }

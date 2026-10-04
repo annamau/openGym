@@ -1,6 +1,6 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { weekDates, parseSelect, applySelection, resolveWeek } from '../src/select.mjs'
+import { isSelected, pruneItems, weekDates, parseSelect, applySelection, resolveWeek } from '../src/select.mjs'
 import { normalizeWorkout, DEFAULT_RULES } from '../src/parse.mjs'
 import { week, pub } from './fixtures/week.mjs'
 
@@ -60,4 +60,20 @@ test('with crossfitIfNoMarker off, such a publication is surfaced as unclear, no
   const r = resolveWeek([odd], { fri: 'crossfit' }, dates, { ...DEFAULT_RULES, crossfitIfNoMarker: false })
   assert.equal(r[0].status, 'missing')
   assert.equal(r[0].unclear.length, 1)
+})
+
+test('only the classes you attend are selected: by weekday and class, whatever the week', () => {
+  const ids = workouts.filter(w => isSelected(w, defaults, DEFAULT_RULES)).map(w => w.sourceId).sort()
+  assert.deepEqual(ids, [9101, 9201, 9301])                      // Tue Hyrox, Wed CrossFit, Thu Hyrox
+  const nextWeek = normalizeWorkout(...Object.values(pub({ id: 1, date: '2026-10-13', blocks: [{ notes: 'HYROX' }] }))).workout   // a Tuesday
+  assert.equal(isSelected(nextWeek, defaults, DEFAULT_RULES), true)
+  const saturday = normalizeWorkout(...Object.values(pub({ id: 2, date: '2026-10-10', blocks: [{ notes: 'x' }] }))).workout
+  assert.equal(isSelected(saturday, defaults, DEFAULT_RULES), false)
+})
+
+test('pruneItems drops everything else, including what cannot be read', () => {
+  const items = [...week, { post: null, detail: null }]
+  const { kept, dropped } = pruneItems(items, defaults, DEFAULT_RULES)
+  assert.deepEqual(kept.map(i => i.post.id).sort(), [9101, 9201, 9301])
+  assert.equal(dropped, 4)
 })

@@ -2,7 +2,11 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { execFileSync } from 'node:child_process'
 import { scrub, defaultMonday } from '../src/cli.mjs'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
 import { ROOT } from './helpers.mjs'
+import { week } from './fixtures/week.mjs'
 
 test('files sent back for diagnosis lose anything that looks personal', () => {
   const clean = scrub({ id: 1, title: 'WOD', email: 'a@b.c', user: { phone: '1', telefono: '2', name: 'x', token: 't' }, list: [{ cookie: 'c', ok: 1 }] })
@@ -43,4 +47,25 @@ test('a day with nothing published is reported, not silently dropped', () => {
 
 test('a bad option is a clear error and exit code, not a stack trace', () => {
   assert.throws(() => execFileSync(process.execPath, ['src/cli.mjs', 'plan', '--demo', '--select', 'tue=yoga'], { cwd: ROOT, encoding: 'utf8', stdio: 'pipe' }), e => /cannot read/.test(e.stderr) && !/at .*\.mjs/.test(e.stderr))
+})
+
+test('clean deletes every publication that is not a selected class, and says how many', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'bridge-clean-'))
+  const file = path.join(dir, 'week-raw.json')
+  fs.writeFileSync(file, JSON.stringify({ gym: { name: 'x' }, items: week }))
+  const out = run('clean', '--out', file)
+  assert.match(out, /Kept 3 .*deleted 3 that were not selected/)
+  const saved = JSON.parse(fs.readFileSync(file, 'utf8'))
+  assert.deepEqual(saved.items.map(i => i.post.id).sort(), [9101, 9201, 9301])
+  assert.deepEqual(saved.selection, { tue: 'hyrox', wed: 'crossfit', thu: 'hyrox' })
+  // a different selection keeps a different set, and clean never brings anything back
+  run('clean', '--out', file, '--select', 'tue=hyrox')
+  assert.deepEqual(JSON.parse(fs.readFileSync(file, 'utf8')).items.map(i => i.post.id), [9101])
+  fs.rmSync(dir, { recursive: true, force: true })
+})
+
+test('plan lists the exercises of each class routine, as apply would create them', () => {
+  const out = run('plan', '--demo')
+  assert.match(out, /Routine "Hyrox · Tue 6 Oct" \(what apply would create in openGym\):/)
+  assert.match(out, /\n {6}\S.* \d+×\d+/)
 })
