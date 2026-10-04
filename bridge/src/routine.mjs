@@ -269,7 +269,7 @@ export function buildRoutine(workout, cls, { catalogue } = {}) {
         cfg.mode = 'cardio'
         cfg.speed = 0
         if (kind === 'stations' && ex?.repeat) cfg.min = round1((ex.repeat <= 5 ? ex.repeat * 60 : ex.repeat) / 60)
-        else cfg.min = cardioMinutes(entry, seg, perMove)
+        else cfg.min = cardioMinutes(entry, seg, perMove ? perMove / Math.max(1, sets) : null)   // the movement's share of the block, per set
         cardioCount++
         if (!blockMinutes) condMinutes += cfg.min * sets
         notes.push('time is an estimate')

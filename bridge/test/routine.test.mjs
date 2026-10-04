@@ -258,3 +258,15 @@ test('dictionary: movements seen in the gym\'s real programming resolve (and dri
 test('format-looking lines are not reported as unrecognised movements', () => {
   for (const line of ["Del 0' al 10':", 'Evento 2: 21-15-9 (TC 10\')', 'Por Parejas:', '*Cambio cada 2\'30"', '2 min ON/1 min Off x 3', 'METCON']) assert.ok(isFormatLine(line), line)
 })
+
+test('a cardio movement inside an EMOM gets its share of the block per set, not the whole block each set', () => {
+  const b = build(pub({ id: 1, date: '2026-10-07', blocks: [{ title: 'EMOM', notes: '' }], ejer: [
+    { ejerName: 'Echo Bike (Cal)', tipoWOD: 0, tWODnom: 'EMOM', formaReg: '3', valor1: [], roundrepeat: '5' },
+    { ejerName: 'Goblet squat', tipoWOD: 0, tWODnom: 'EMOM', formaReg: '3', valor1: ['15'], roundrepeat: '5' },
+    { ejerName: 'Burpee', tipoWOD: 0, tWODnom: 'EMOM', formaReg: '3', valor1: ['10'], roundrepeat: '5' },
+  ] }), 'crossfit')
+  const bike = b.routine.ex.find(e => e.mode === 'cardio')
+  assert.equal(bike.sets, 5)
+  assert.equal(bike.min, 1)                       // 15 block minutes / 3 movements / 5 sets
+  assert.equal(b.effort.condMinutes, 15)
+})
