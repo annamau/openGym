@@ -20,7 +20,7 @@ It does everything that can be done for you, in this order, and **writes to open
 1. shows your default classes and asks if anything changes this week (press Enter to keep them, or type `skip tue`,
    `tue=crossfit`, `skip tue, add fri=crossfit`), then asks for your Aimharder email and password (typed here,
    hidden, never saved) and reads the published classes;
-   only your selected classes are kept on disk (see "fetch" below);
+   only one week (the upcoming one) of your selected classes is kept on disk (see "fetch" below);
 2. plans the week that starts next Monday and prints the report (also saved as `out/plan.txt`);
 3. asks whether to also create the free workout, shows exactly what would be added to openGym (a dry run),
    and asks “Write this to openGym now? [y/N]”. On `y` it backs up your openGym data, writes, and reads the result back.
@@ -50,9 +50,13 @@ it found and labelled the right classes. A publication is the Hyrox class when o
 “HYROX”; every other publication is the CrossFit class. It only reads. It never books or changes anything.
 You can also set `AIMHARDER_USER` and `AIMHARDER_PASSWORD` in the terminal instead of being asked.
 
-Only the classes you selected are kept: the fetch drops every other publication (other days, the class
-you do not attend) before anything is written to disk, and says how many it dropped. If you change your
-selection, run `fetch` again. `node src/cli.mjs clean` does the same to an existing `out/week-raw.json`.
+Only one week and only the classes you selected are kept: the fetch drops every other publication (other
+weeks, other days, the class you do not attend) before anything is written to disk, and says how many it
+dropped. The week is the upcoming Monday on a weekend and this week's Monday otherwise; `--week-of 2026-09-28`
+asks for another one. It reads only the newest ~18 publications (more with `--max-posts`, or when you name
+an older week). If that week is not published yet it keeps nothing and tells you the newest week it saw.
+If you change the selection, run `fetch` again. `node src/cli.mjs clean` trims an existing `out/week-raw.json`
+the same way (add `--week-of` to keep just one week).
 
 **2. plan** works offline from that file. For the week starting next Monday (on a weekend; otherwise
 this Monday) it prints, per class day, a one-line summary (“legs + cardio”), the muscles hit, what it

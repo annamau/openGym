@@ -1,6 +1,6 @@
 // Which classes you attend this week, and which published workout belongs to each.
 
-import { DAYS, addDays, weekdayOf } from './util.mjs'
+import { DAYS, addDays, weekdayOf, mondayOf } from './util.mjs'
 import { classify, normalizeWorkout } from './parse.mjs'
 
 /** Monday-first: { mon: '2026-10-05', ... } for the week starting on `mondayIso`. */
@@ -56,14 +56,17 @@ export function isSelected(workout, selection, rules) {
 }
 
 /**
- * Keep only the raw publications ({post, detail}) of selected classes. Everything else, including
- * publications that cannot be read, is dropped, so nothing about days or classes you do not attend is stored.
+ * Keep only the raw publications ({post, detail}) of selected classes, and, when `weekOf` (a Monday) is given,
+ * only those of that Monday-to-Sunday week. Everything else, including publications that cannot be read,
+ * is dropped, so nothing about other days, classes or weeks is stored.
  */
-export function pruneItems(items, selection, rules) {
+export function pruneItems(items, selection, rules, { weekOf } = {}) {
   const kept = []
   for (const it of items || []) {
     const n = normalizeWorkout(it?.post, it?.detail)
-    if (n.ok && isSelected(n.workout, selection, rules)) kept.push(it)
+    if (!n.ok || !isSelected(n.workout, selection, rules)) continue
+    if (weekOf && mondayOf(n.workout.date) !== weekOf) continue
+    kept.push(it)
   }
   return { kept, dropped: (items || []).length - kept.length }
 }

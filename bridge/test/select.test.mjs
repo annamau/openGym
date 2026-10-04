@@ -77,3 +77,11 @@ test('pruneItems drops everything else, including what cannot be read', () => {
   assert.deepEqual(kept.map(i => i.post.id).sort(), [9101, 9201, 9301])
   assert.equal(dropped, 4)
 })
+
+test('pruneItems can keep one Monday-to-Sunday week only', () => {
+  const nextTue = pub({ id: 9500, date: '2026-10-13', wodClass: 'Hyrox', blocks: [{ notes: 'HYROX' }] })
+  const items = [...week, nextTue]
+  assert.deepEqual(pruneItems(items, defaults, DEFAULT_RULES, { weekOf: '2026-10-05' }).kept.map(i => i.post.id).sort(), [9101, 9201, 9301])
+  assert.deepEqual(pruneItems(items, defaults, DEFAULT_RULES, { weekOf: '2026-10-12' }).kept.map(i => i.post.id), [9500])
+  assert.equal(pruneItems(items, defaults, DEFAULT_RULES).kept.length, 4, 'no window: every week')
+})

@@ -58,8 +58,8 @@ const HELP = `
 openGym bridge
 
   week    [--skip-fetch] [--skip thu] [--select ...] [--free upper|legs|none]   THE SUNDAY COMMAND (also: npm run week)
-  fetch   [--domain aimharder.es] [--gym ID] [--select ...]   (keeps only your selected classes; the rest is not saved)
-  clean   [--select ...]                         (deletes from out/week-raw.json everything that is not a selected class)
+  fetch   [--week-of YYYY-MM-DD] [--domain aimharder.es] [--gym ID] [--select ...]   (keeps one week, only your selected classes; the rest is not saved)
+  clean   [--select ...] [--week-of ...]         (deletes from out/week-raw.json everything that is not a selected class, or not that week)
   plan    [--week-of YYYY-MM-DD] [--select tue=hyrox,wed=crossfit] [--skip thu] [--add fri=crossfit]
           [--pick wed=<publication id>] [--free upper|legs|none] [--last-free upper|legs] [--demo]
   pair    --url https://your-site.netlify.app [--code ABC123]
@@ -98,27 +98,42 @@ function readWorkouts(rawFile) {
   return { raw, workouts, unreadable }
 }
 
-async function cmdFetch(o) {
+/** The week this run is about: --week-of, else the upcoming Monday on a weekend and this week's Monday otherwise. */
+function targetWeek(o) {
+  const weekOf = o['week-of'] || defaultMonday(todayIso())
+  if (weekdayOf(weekOf) !== 1) throw new Error(`--week-of must be a Monday (${weekOf} is not)`)
+  return weekOf
+}
+
+export async function cmdFetch(o) {
+  const weekOf = targetWeek(o)
   const username = process.env.AIMHARDER_USER || await ask('Aimharder email or username: ')
   const password = process.env.AIMHARDER_PASSWORD || await ask('Aimharder password (hidden): ', { hidden: true })
   const client = new AimharderClient({ username, password, domain: o.domain || process.env.AIMHARDER_DOMAIN || 'aimharder.es' })
+  // The newest publications come first, so the latest week is within the first ~18; an older week needs a deeper look.
   const result = await client.fetchPublished({
-    gymId: o.gym, maxPosts: Number(o['max-posts'] || 40),
+    gymId: o.gym, maxPosts: Number(o['max-posts'] || (o['week-of'] ? 40 : 18)),
     onProgress: ({ i, of }) => process.stderr.write(`\r  reading publication ${i}/${of}   `),
   })
   process.stderr.write('\n')
   const { sel } = loadConfig()
   const { selection } = selectionFrom(o, sel)
+  const rules = sel.rules || DEFAULT_RULES
   const file = rawFileOf(o)
-  // Only the classes you attend are kept; the rest of the feed is never written to disk.
-  const { kept, dropped } = pruneItems(result.items, selection, sel.rules || DEFAULT_RULES)
-  writeJson(file, scrub({ fetchedAt: new Date().toISOString(), gym: result.gym, selection, items: kept }))
+  // Only the classes you attend, for this one week, are kept; the rest of the feed is never written to disk.
+  const { kept, dropped } = pruneItems(result.items, selection, rules, { weekOf })
+  writeJson(file, scrub({ fetchedAt: new Date().toISOString(), gym: result.gym, weekOf, selection, items: kept }))
   const { workouts, unreadable } = readWorkouts(file)
+  const classes = Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(', ')
   console.log(`Gym: ${result.gym.name}. ${result.items.length} workout publications read (feed had ${result.feedSize}).`)
-  console.log(`Kept ${kept.length}: only your selected classes (${Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(', ')}). The other ${dropped} were not saved.`)
-  for (const w of workouts.sort((a, b) => a.date.localeCompare(b.date))) console.log(`  ${w.date} ${DAY_LONG[DAYS[(weekdayOf(w.date) + 6) % 7]]}  ${classify(w, sel.rules || DEFAULT_RULES)} [${w.sourceId}] ${w.exercises.length} exercises`)
+  console.log(`Kept ${kept.length} for the week of ${DAY_LONG.mon} ${prettyDate(weekOf)}: only your selected classes (${classes}). The other ${dropped} were not saved.`)
+  for (const w of workouts.sort((a, b) => a.date.localeCompare(b.date))) console.log(`  ${w.date} ${DAY_LONG[DAYS[(weekdayOf(w.date) + 6) % 7]]}  ${classify(w, rules)} [${w.sourceId}] ${w.exercises.length} exercises`)
+  if (!kept.length) {
+    const dates = result.items.map(it => normalizeWorkout(it.post, it.detail)).filter(n => n.ok).map(n => n.workout.date).sort()
+    console.log(`  Nothing is published yet for that week${dates.length ? ` (the newest publications are for the week of ${DAY_LONG.mon} ${prettyDate(mondayOf(dates.at(-1)))})` : ''}. The gym usually uploads on Sunday around 8pm; run it again then.`)
+  }
   if (unreadable.length) console.log(`  could not read ${unreadable.length}: ${[...new Set(unreadable)].join('; ')}`)
-  console.log(`\nSaved ${path.relative(process.cwd(), file)} (email/phone/token-like fields removed). If you change the selection later, run fetch again.`)
+  console.log(`\nSaved ${path.relative(process.cwd(), file)} (email/phone/token-like fields removed). If you change the selection, run fetch again.`)
 }
 
 function cmdClean(o) {
@@ -127,8 +142,9 @@ function cmdClean(o) {
   const file = rawFileOf(o)
   if (!fs.existsSync(file)) return console.log('No week-raw.json to clean.')
   const raw = readJson(file)
-  const { kept, dropped } = pruneItems(raw.items, selection, sel.rules || DEFAULT_RULES)
-  writeJson(file, scrub({ fetchedAt: raw.fetchedAt, gym: raw.gym, selection, items: kept }))
+  const weekOf = o['week-of'] ? targetWeek(o) : undefined       // clean keeps every week unless you name one
+  const { kept, dropped } = pruneItems(raw.items, selection, sel.rules || DEFAULT_RULES, { weekOf })
+  writeJson(file, scrub({ fetchedAt: raw.fetchedAt, gym: raw.gym, ...(weekOf ? { weekOf } : {}), selection, items: kept }))
   console.log(`Kept ${kept.length} publication(s) for ${Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(', ')}; deleted ${dropped} that were not selected.`)
 }
 
