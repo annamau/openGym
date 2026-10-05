@@ -11,7 +11,10 @@
     "week": "node src/cli.mjs week",
     "fetch": "node src/cli.mjs fetch",
     "plan": "node src/cli.mjs plan",
-    "clean": "node src/cli.mjs clean"
+    "clean": "node src/cli.mjs clean",
+    "ui": "node src/server.mjs",
+    "garmin:refresh": "uv run --python 3.12 --with garminconnect scripts/garmin_refresh.py",
+    "garmin:login": "uv run --python 3.12 --with garminconnect scripts/garmin_refresh.py --login"
   },
   "license": "AGPL-3.0-or-later"
 }

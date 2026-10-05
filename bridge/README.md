@@ -158,3 +158,14 @@ only as “optional” suggestions.
 Netlify can run a scheduled function every Sunday night that does fetch + plan and sends you the report,
 so only the approval stays manual. It needs your Aimharder login stored as a Netlify environment
 variable, which is a deliberate decision, so it is not built yet.
+
+## Local UI (optional): `npm run ui`
+
+A calendar at http://localhost:4173 instead of the terminal. Same rules: runs on your computer, no dependencies, listens on 127.0.0.1 only.
+
+- **Credentials**: copy `.env.example` to `.env` and fill in `AIMHARDER_USER` / `AIMHARDER_PASSWORD` (the file is gitignored; the UI never asks for or stores them).
+- **Aimharder classes and the suggested free workout** are read-only. **Running plan** and **Other** workouts can be added, edited and deleted; they live in `config/extras.local.json` (local only, gitignored, not sent to openGym).
+- **Syncs → Select Classes** changes the classes for the current week only; your defaults in `config/selection.json` are untouched.
+- **Syncs → Sync with Aim Harder** reads the gym, plans the week and shows a dry run. **Write to openGym** is the only thing that writes (backup first), behind a browser confirm.
+
+Known tech debt (UI): pairing with openGym still needs `node src/cli.mjs pair` once in a terminal; the write confirmation is a plain browser `confirm()` rather than the CLI's full preview + `[y/N]` flow; sync shows no live progress, only the final log; `--pick` (two publications for one day) has no screen yet; the calendar shows the bridge's plan, not what is currently in openGym.

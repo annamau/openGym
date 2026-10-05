@@ -22,6 +22,7 @@ import { buildFreeMenu, recommendFree } from './free.mjs'
 import { renderPlan } from './report.mjs'
 import { OpenGymClient, OpenGymError, redeemPairingCode, saveToken, loadToken, syncToOpenGym } from './opengym.mjs'
 import { ask } from './prompt.mjs'
+import { loadEnv } from './env.mjs'
 import { DAYS, DAY_LONG, addDays, mondayOf, todayIso, weekdayOf, prettyDate, norm } from './util.mjs'
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
@@ -148,7 +149,7 @@ function cmdClean(o) {
   console.log(`Kept ${kept.length} publication(s) for ${Object.entries(selection).map(([d, c]) => `${DAY_LONG[d]} ${c}`).join(', ')}; deleted ${dropped} that were not selected.`)
 }
 
-function cmdPlan(o) {
+export function cmdPlan(o) {
   const { sel, targets } = loadConfig()
   const rawFile = o.demo ? P('test', 'fixtures', 'week-demo.json') : rawFileOf(o)
   if (!fs.existsSync(rawFile)) throw new Error('No week-raw.json yet. Run "fetch" first (or "plan --demo" to see a sample).')
@@ -218,7 +219,7 @@ async function cmdPair(o) {
   console.log(`Paired${info.user ? ' as ' + info.user : ''}. Token saved to ${path.basename(tokenFile())} (kept out of git, valid for the server's session length).`)
 }
 
-async function cmdApply(o) {
+export async function cmdApply(o) {
   const file = outFile('proposal.json')
   if (!fs.existsSync(file)) throw new Error('No out/proposal.json. Run "plan" first.')
   const proposal = readJson(file)
@@ -368,6 +369,7 @@ export async function cmdWeek(o, io = { ask }) {
 }
 
 async function main() {
+  loadEnv(P('.env'))
   const { values: o, positionals } = parseArgs({ options: OPTIONS, allowPositionals: true })
   const cmd = positionals[0]
   if (!cmd || o.help) return console.log(HELP)

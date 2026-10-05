@@ -6,3 +6,6 @@ out/
 # your own routines (personal training data): keep them local, never publish them
 config/free/*.txt
 !config/free/*.example.txt
+.env
+# your personal race plan (goals, heart-rate data): keep it local
+ui/plan.json

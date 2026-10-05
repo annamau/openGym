@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Weekly Training Planner</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <h1 id="title">October 2026</h1>
+    <div class="controls">
+      <div class="nav">
+        <button class="icon-btn" id="prev" aria-label="Previous">‹</button>
+        <button class="today-dot" id="today" aria-label="Go to today" title="Today"></button>
+        <button class="icon-btn" id="next" aria-label="Next">›</button>
+      </div>
+      <button class="btn primary" id="newBtn">+ New</button>
+      <div class="menu-wrap viewdd">
+        <button class="btn" id="viewBtn" aria-haspopup="true" aria-expanded="false"><span id="viewLabel">Week</span> <span class="caret">▾</span></button>
+        <div class="menu small" id="viewMenu" hidden></div>
+      </div>
+      <div class="seg" id="views" role="tablist">
+        <button data-view="day">Day</button>
+        <button data-view="week" class="on">Week</button>
+        <button data-view="month">Month</button>
+      </div>
+      <div class="menu-wrap">
+        <button class="btn" id="syncs" aria-haspopup="true" aria-expanded="false">Menu <span class="caret">▾</span></button>
+        <div class="menu" id="syncMenu" hidden>
+          <button class="menu-item" id="planBtn"><b>Running Plan</b><small>Phases and week-by-week sessions</small></button>
+          <button class="menu-item" id="progBtn"><b>Progress on Running Plan</b><small>How it is going, from your Garmin data</small></button>
+          <hr>
+          <button class="menu-item" id="doSync"><b>Sync with Aim Harder</b><small>Reads this week's classes and previews the plan (writes nothing)</small></button>
+          <button class="menu-item" id="doApply"><b>Write to openGym</b><small>Adds the planned routines to your openGym</small></button>
+          <button class="menu-item" id="openClasses"><b>Select Classes</b><small>CrossFit or Hyrox per weekday, for this week</small></button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main id="board"></main>
+
+  <footer class="legend">
+    <span><i class="dot class"></i>Class</span><span><i class="dot free"></i>Free workout</span>
+    <span><i class="dot run"></i>Running plan</span><span><i class="dot other"></i>Other</span>
+    <span id="mode" class="mode"></span>
+  </footer>
+</div>
+
+<div class="overlay" id="modal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt">
+    <div class="modal-head"><h2 id="mt">Select Classes</h2><button class="icon-btn" id="closeModal" aria-label="Close">✕</button></div>
+    <p class="muted" id="selNote">Pick which class you attend each weekday.</p>
+    <table class="sel" id="selTable"></table>
+    <div class="modal-foot"><button class="btn" id="cancelModal">Cancel</button><button class="btn primary" id="applySel">Apply Class Selection</button></div>
+  </div>
+</div>
+<div class="overlay" id="wModal" hidden>
+  <form class="modal" id="wForm" autocomplete="off">
+    <div class="modal-head"><h2 id="wTitle">New workout</h2><button type="button" class="icon-btn" data-close aria-label="Close">✕</button></div>
+    <label class="f">Title<input name="title" required placeholder="e.g. Upper Body Strength"></label>
+    <div class="f">Category<div class="cats" id="cats"></div></div>
+    <div class="row"><label class="f">Day<input type="date" name="date" required></label><label class="f">Time<input type="time" name="time" required></label></div>
+    <label class="f">Description<textarea name="detail" rows="3" placeholder="Optional notes, sets, pace…"></textarea></label>
+    <div class="f">Tags<div class="tagbox" id="tagbox"><input id="tagIn" placeholder="Type a tag, press Enter"></div></div>
+    <div class="modal-foot"><button type="button" class="btn danger" id="delBtn" hidden>Delete</button><span class="sp"></span><button type="button" class="btn" data-close>Cancel</button><button class="btn primary" id="saveBtn">Save</button></div>
+  </form>
+</div>
+<div class="overlay" id="logModal" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="lt">
+    <div class="modal-head"><h2 id="lt">Result</h2><button class="icon-btn" id="closeLog" aria-label="Close">✕</button></div>
+    <pre class="log" id="logText"></pre>
+    <div class="modal-foot"><span class="sp"></span><button class="btn primary" id="okLog">Close</button></div>
+  </div>
+</div>
+<div class="overlay" id="pModal" hidden>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+    <div class="modal-head"><h2 id="pTitle">Running Plan</h2><button class="icon-btn" id="closePlan" aria-label="Close">✕</button></div>
+    <div id="planBody" class="plan"></div>
+  </div>
+</div>
+<div class="overlay" id="gModal" hidden>
+  <div class="modal wide" role="dialog" aria-modal="true" aria-labelledby="gTitle">
+    <div class="modal-head"><h2 id="gTitle">Progress on Running Plan</h2><span class="sp"></span><button class="btn" id="garminBtn">↻ Refresh from Garmin</button><button class="icon-btn" id="closeProg" aria-label="Close">✕</button></div>
+    <div id="progBody" class="plan"></div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<script src="api.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
