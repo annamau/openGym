@@ -1394,6 +1394,7 @@ components:
         name: { type: string }
         emoji: { type: string }
         cat: { type: string, description: 'Id of the category this routine belongs to (optional).' }
+        note: { type: string, description: 'Free-text note shown with the routine (optional), e.g. a run''s pace and distance.' }
         ex:
           type: array
           description: Exercises with set/rep targets.

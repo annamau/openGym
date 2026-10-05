@@ -1693,11 +1693,12 @@ function RoutineDetail({ id, iso, close }) {
     <div className="small muted" style={{ marginBottom: 12 }}>
       {cat && <><CatDot cat={cat} />{cat.name} · </>}{exCount(r.ex.length)}{iso && <> · {fmtDate(iso, true)}</>}
     </div>
+    {r.note && <div className="card small" style={{ marginBottom: 12, whiteSpace: 'pre-wrap' }}>{r.note}</div>}
     {r.ex.length ? <div className="list" style={{ marginBottom: 14 }}>
       {r.ex.map((e, i) => <div key={i} className="item">
         <div className="grow"><div className="tt capitalize">{exerciseNameFor(exOr(e.id))}</div><div className="ss">{exLine(e, st.unit)}</div></div>
       </div>)}
-    </div> : <div className="muted small" style={{ marginBottom: 14 }}>{t('No exercises yet.')}</div>}
+    </div> : !r.note && <div className="muted small" style={{ marginBottom: 14 }}>{t('No exercises yet.')}</div>}
     {iso === todayISO() && !st.active && <><Button variant="primary" icon="play" onClick={() => { close(); startFlow([r.id]) }}>{t('Start')}</Button><div style={{ height: 8 }} /></>}
     <Button onClick={() => { close(); nav('/plan/r/' + r.id) }}>{t('Edit routine')}</Button>
   </>
