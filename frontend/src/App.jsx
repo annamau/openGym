@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef } from 'react'
+import { dueAutoDone, applyAutoDone } from './lib/auto-done.js'
 import { HashRouter, Routes, Route, Navigate, useNavigate, useLocation, useNavigationType } from 'react-router-dom'
 import { useStore } from './store/useStore.js'
 import { useUI } from './store/useUI.js'
@@ -121,6 +122,22 @@ function Shell() {
     if (MOBILE || !user || !ready) return
     syncPushSubscription().catch(() => {})
   }, [user?.id, ready])
+
+  // A planned activity whose time has passed with nothing logged counts as done (lib/auto-done.js).
+  // Checked on load, when the app comes back to the front, and every few minutes while open.
+  useEffect(() => {
+    if (!ready && !user && !isGuest) return
+    const check = () => {
+      const st = useStore.getState()
+      if (!st.S || st.S.active || !dueAutoDone(st.S).length) return
+      st.update(s => { applyAutoDone(s) })
+    }
+    check()
+    const onVis = () => { if (document.visibilityState === 'visible') check() }
+    document.addEventListener('visibilitychange', onVis)
+    const iv = setInterval(check, 5 * 60000)
+    return () => { document.removeEventListener('visibilitychange', onVis); clearInterval(iv) }
+  }, [ready, user?.id, isGuest])
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
