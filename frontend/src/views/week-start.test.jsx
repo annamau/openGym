@@ -67,7 +67,7 @@ afterEach(() => {
 })
 
 const segButton = label => [...host.querySelectorAll('.seg button')].find(b => b.textContent === label)
-const dayRows = () => [...host.querySelectorAll('.item .tt')].map(e => e.textContent)
+const dayRows = () => [...host.querySelectorAll('.plan-default .item .tt')].map(e => e.textContent)
 
 describe('Settings — week starts on', () => {
   const mount = () => act(() => root.render(<Settings />))
@@ -112,7 +112,7 @@ describe('Plan — the week schedule follows the setting', () => {
     mocks.S.week = { 0: 'r1' }        // Sunday
     mocks.S.weekStart = 0
     mount()
-    const rows = [...host.querySelectorAll('.item')]
+    const rows = [...host.querySelectorAll('.plan-default .item')]
     expect(rows[0].querySelector('.tt').textContent).toBe('Sunday')
     expect(rows[0].textContent).toContain('Push')
     expect(rows[1].textContent).not.toContain('Push')

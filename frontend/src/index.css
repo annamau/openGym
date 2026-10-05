@@ -2096,3 +2096,19 @@ body.chips-dragging *{cursor:inherit}
   box-shadow:0 6px 20px -3px rgba(255,0,0,.65);
   border:1.5px solid rgba(236,255,235,.4);
 }
+
+/* ---------- Plan: dated week + activity categories ---------- */
+.cat-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;vertical-align:middle;flex:none}
+.plan-weeknav{margin:2px 0 10px}
+.plan-wklabel{background:none;border:0;padding:4px 8px;font:inherit;font-size:13px;font-weight:500;color:var(--label-2)}
+.plan-wklabel:disabled{opacity:1;cursor:default}
+.plan-act{position:relative}
+.plan-act::before{content:'';position:absolute;left:0;top:6px;bottom:6px;width:3px;border-radius:2px;background:var(--cat,transparent)}
+.item.plan-today>.row:first-child .tt{color:var(--acc);font-weight:600}
+.plan-legend{display:flex;flex-wrap:wrap;gap:6px 14px;margin:10px 2px 0;font-size:12px;color:var(--label-2)}
+.plan-legend span{display:inline-flex;align-items:center}
+.cat-chips{display:flex;flex-wrap:wrap;gap:8px}
+.cat-chips .chip{display:inline-flex;align-items:center}
+.plan-done{border:0;font:inherit;font-size:inherit;cursor:pointer;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-act{cursor:pointer;border-radius:8px}
+.plan-act:active{background:var(--surface-2)}

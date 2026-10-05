@@ -1,8 +1,12 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
-import { DAYN, weekOrder, weekStartOf, uid, exCount, routineCount } from '../lib/format.js'
-import { t } from '../lib/i18n.js'
-import { dayAssignSheet, dayAddRoutineSheet, starterPlanSheet, planToolsSheet } from '../sheets.jsx'
+import { useState } from 'react'
+import { DAYN, weekOrder, weekStartOf, startOfWeek, isoOf, todayISO, uid, exCount, routineCount } from '../lib/format.js'
+import { t, dateLocale } from '../lib/i18n.js'
+import { dayAddRoutineSheet, dateAddRoutineSheet, starterPlanSheet, planToolsSheet, calendarSheet, categoriesSheet, routineDetailSheet, workoutDetailSheet } from '../sheets.jsx'
+import CatDot from '../components/CatDot.jsx'
+import { effectiveRoutines } from '../lib/history.js'
+import { removeFromDate, categoryOf, catColor } from '../lib/plan.js'
 import Icon from '../components/Icon.jsx'
 import { Button } from '../components/ui.jsx'
 import { tappable } from '../lib/use-sheet-keyboard.js'
@@ -46,10 +50,49 @@ export default function Plan() {
     if (next.length) s.week[d] = next; else delete s.week[d]
   })
 
+  // The dated week: real dates, each with its own activity list (lib/plan.js). Starts on the
+  // current week and follows the week-start setting, like Home's strip.
+  const [weekOffset, setWeekOffset] = useState(0)
+  const ws = weekStartOf(S)
+  const today = todayISO()
+  const wkStart = startOfWeek(today, ws)
+  wkStart.setDate(wkStart.getDate() + weekOffset * 7)
+  const dates = Array.from({ length: 7 }, (_, i) => { const d = new Date(wkStart); d.setDate(wkStart.getDate() + i); return d })
+  const wkEnd = dates[6]
+  const short = d => d.toLocaleDateString(dateLocale(), { day: 'numeric', month: 'short' })
+  const wkLabel = weekOffset === 0 ? t('This week') : `${short(wkStart)} – ${short(wkEnd)}`
+  const doneOn = iso => S.workouts.filter(w => w.d === iso)
+  const cats = S.categories || []
+
+  // One activity sub-row: the category colour runs down its left edge; tapping it shows what
+  // the routine trains (routineDetailSheet), ✕ takes it off this day only.
+  const activity = (r, onRemove, iso) => {
+    const cat = categoryOf(S, r)
+    return <div key={r.id} className="row plan-act" style={{ gap: 8, padding: '4px 0 4px 8px', '--cat': cat ? catColor(cat) : 'transparent' }}
+      {...tappable(() => routineDetailSheet(r.id, iso))}>
+      <span className="lrow-i" style={{ width: 26, height: 26, fontSize: 14 }}><Icon name={glyphOf(r.emoji)} /></span>
+      <div className="grow" style={{ minWidth: 0 }}><div className="tt" style={{ fontSize: 14 }}>{r.name}</div>
+        <div className="ss">{cat && <>{cat.name} · </>}{exCount(r.ex.length)}</div></div>
+      <button className="iconbtn sm" aria-label={t('Remove')} onClick={ev => { ev.stopPropagation(); onRemove() }}><Icon name="xmark" /></button>
+    </div>
+  }
+  // The day's header row: name on the left, status and the ＋ that adds an activity on the right.
+  const dayHead = (title, status, onAdd, spaced) => <div className="row between" style={{ marginBottom: spaced ? 6 : 0, gap: 8 }}>
+    <div className="tt">{title}</div>
+    <div className="row" style={{ gap: 6, minWidth: 0 }}>
+      {status}
+      <button className="iconbtn sm" aria-label={t('Add routine')} title={t('Add routine')} onClick={onAdd}><Icon name="plus" /></button>
+    </div>
+  </div>
+
   return <>
     <div className="hdr">
       <div><h1>{t('Plan')}</h1><div className="sub">{t('Your weekly routine')}</div></div>
-      <button className="iconbtn" onClick={planToolsSheet} aria-label={t('Share your plan')} title={t('Share your plan')}><Icon name="upload" /></button>
+      <div className="row" style={{ gap: 8 }}>
+        <button className="iconbtn" onClick={() => calendarSheet(isoOf(wkStart))} aria-label={t('Month')} title={t('Month')}><Icon name="calendar" /></button>
+        <button className="iconbtn" onClick={() => categoriesSheet()} aria-label={t('Categories')} title={t('Categories')}><Icon name="folder" /></button>
+        <button className="iconbtn" onClick={planToolsSheet} aria-label={t('Share your plan')} title={t('Share your plan')}><Icon name="upload" /></button>
+      </div>
     </div>
     {showCoach && <button className="coach-cta" onClick={() => nav('/coach')}>
       <span className="coach-cta-av"><Icon name="sparkles" /></span>
@@ -60,30 +103,39 @@ export default function Plan() {
       <Icon name="chevronRight" className="coach-cta-chev" />
     </button>}
 
+    <div className="row between plan-weeknav">
+      <button className="iconbtn" style={{ width: 30, height: 30, fontSize: 15 }} onClick={() => setWeekOffset(w => w - 1)} aria-label={t('Previous week')}><Icon name="chevronLeft" /></button>
+      <button className="plan-wklabel" onClick={() => setWeekOffset(0)} disabled={weekOffset === 0} aria-label={t('This week')}>{wkLabel}</button>
+      <button className="iconbtn" style={{ width: 30, height: 30, fontSize: 15 }} onClick={() => setWeekOffset(w => w + 1)} aria-label={t('Next week')}><Icon name="chevronRight" /></button>
+    </div>
+    <div className="list plan-dates" style={{ display: 'flex', flexDirection: 'column' }}>
+      {dates.map(d => {
+        const iso = isoOf(d)
+        const acts = effectiveRoutines(S, iso)
+        const done = doneOn(iso)
+        const status = done.length > 0
+          ? <button className="tag acc plan-done" onClick={() => workoutDetailSheet(done[done.length - 1])}><Icon name="check" /> {done.map(w => w.name).join(' + ')}</button>
+          : acts.length ? <div className="small dim">{routineCount(acts.length)}</div> : <span className="tag">{t('Rest')}</span>
+        return <div key={iso} className={'item' + (iso === today ? ' plan-today' : '')} style={{ display: 'block', padding: '10px 14px' }}>
+          {dayHead(d.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric' }), status, () => dateAddRoutineSheet(iso), acts.length > 0)}
+          {acts.map(r => activity(r, () => update(s => removeFromDate(s, iso, r.id)), iso))}
+        </div>
+      })}
+    </div>
+    {cats.length > 0 && <div className="plan-legend">
+      {cats.map(c => <span key={c.id}><CatDot cat={c} />{c.name}</span>)}
+    </div>}
+
     <div className="cols"><div>
-      <h4 className="sec">{t('Week schedule')}</h4>
-      <div className="list" style={{ display: 'flex', flexDirection: 'column' }}>
+      <h4 className="sec">{t('Default week')}</h4>
+      <div className="small dim" style={{ margin: '-4px 2px 10px' }}>{t('Repeats every week. A date you edit above keeps its own activities.')}</div>
+      <div className="list plan-default" style={{ display: 'flex', flexDirection: 'column' }}>
         {weekOrder(weekStartOf(S)).map(d => {
           const dayRoutines = [].concat(S.week[d] || []).map(id => S.routines.find(x => x.id === id)).filter(Boolean)
-          // An empty day stays one tappable row → pick its first routine (today's behaviour).
-          if (!dayRoutines.length) return <div key={d} className="item" {...tappable(() => dayAssignSheet(d))}>
-            <div className="grow"><div className="tt">{t(DAYN[d])}</div></div>
-            <span className="tag">{t('Rest')}</span>
-            <Icon name="chevronRight" className="chev" /></div>
-          // A populated day: always-visible routine sub-rows + inline ✕, then ＋ Add routine.
           return <div key={d} className="item" style={{ display: 'block', padding: '10px 14px' }}>
-            <div className="row between" style={{ marginBottom: 6 }}>
-              <div className="tt">{t(DAYN[d])}</div>
-              <div className="small dim">{routineCount(dayRoutines.length)}</div>
-            </div>
-            {dayRoutines.map(r => <div key={r.id} className="row" style={{ gap: 8, padding: '4px 0 4px 8px' }}>
-              <span className="lrow-i" style={{ width: 26, height: 26, fontSize: 14 }}><Icon name={glyphOf(r.emoji)} /></span>
-              <div className="grow" style={{ minWidth: 0 }}><div className="tt" style={{ fontSize: 14 }}>{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
-              <button className="iconbtn sm" aria-label={t('Remove')} onClick={() => removeFromDay(d, r.id)}><Icon name="xmark" /></button>
-            </div>)}
-            <button className="btn ghost sm" style={{ marginTop: 4, marginLeft: 8 }} onClick={() => dayAddRoutineSheet(d)}>
-              <Icon name="plus" /> {t('Add routine')}
-            </button>
+            {dayHead(t(DAYN[d]), dayRoutines.length ? <div className="small dim">{routineCount(dayRoutines.length)}</div> : <span className="tag">{t('Rest')}</span>,
+              () => dayAddRoutineSheet(d), dayRoutines.length > 0)}
+            {dayRoutines.map(r => activity(r, () => removeFromDay(d, r.id)))}
           </div>
         })}
       </div>
@@ -94,7 +146,8 @@ export default function Plan() {
       </div>
       {S.routines.length ? <div className="list">{S.routines.map((r, i) => <div key={r.id} className="item" {...tappable(() => nav('/plan/r/' + r.id))}>
         <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
-        <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
+        <div className="grow"><div className="tt">{r.name}</div>
+          <div className="ss">{categoryOf(S, r) && <><CatDot cat={categoryOf(S, r)} />{categoryOf(S, r).name} · </>}{exCount(r.ex.length)}</div></div>
         {/* The order of this list is the order of `S.routines`, and every other screen reads the
             same array — the Start screen, the day-assignment sheets, the routine pickers. So
             moving a routine here moves it everywhere, which is what the request asked for (#142). */}

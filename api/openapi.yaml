@@ -1299,8 +1299,21 @@ components:
         dayPlan:
           type: object
           description: >-
-            Per-date overrides: ISO date → routine id, or "rest". Wins over `week`.
-          additionalProperties: { type: string }
+            Per-date plan: ISO date → that date's own list of routine ids, a single routine id
+            (a reschedule), or "rest". Wins over `week`.
+          additionalProperties:
+            oneOf:
+              - { type: string }
+              - { type: array, items: { type: string } }
+        categories:
+          type: array
+          description: 'Activity categories, per profile. A routine points at one through `cat`.'
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              name: { type: string }
+              color: { type: string, description: 'Accent palette key, e.g. "pink", "ocean".' }
         bodyweight:
           type: array
           items: { $ref: '#/components/schemas/BodyweightEntry' }
@@ -1380,6 +1393,8 @@ components:
         id: { type: string }
         name: { type: string }
         emoji: { type: string }
+        cat: { type: string, description: 'Id of the category this routine belongs to (optional).' }
+        note: { type: string, description: 'Free-text note shown with the routine (optional), e.g. a run''s pace and distance.' }
         ex:
           type: array
           description: Exercises with set/rep targets.
