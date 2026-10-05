@@ -28,6 +28,8 @@ import { exerciseHistory } from './lib/exercise-history.js'
 import { nextPrescription, applyPrescription, policyFor, defaultIncrement, POLICIES_FOR, POLICY_NAME, POLICY_DESC, MAX_BW_SETS, weightIncrement } from './lib/progression.js'
 import { normalizeRepRange } from './lib/rep-range.js'
 import { MOBILE, shareExport, printHtml } from './lib/mobile.js'
+import CatDot from './components/CatDot.jsx'
+import { isRescheduled, dateColor, addToDate, categoryOf, catColor, addCategory, editCategory, deleteCategory, CAT_COLORS, SUGGESTED_CATS } from './lib/plan.js'
 import { buildCompletedWorkout } from './lib/finish-workout.js'
 import { isWarmupRow, hasCompletedWork } from './lib/workout-model.js'
 import { nextUnfinishedUnit } from './lib/supersetFlow.js'
@@ -1639,28 +1641,91 @@ function DayAssign({ day, close }) {
 }
 export const dayAssignSheet = day => ui().openSheet(close => <DayAssign day={day} close={close} />)
 
-// ＋ Add routine on a populated weekday: single-pick, appends to the day's list. A routine
-// already on that day is disabled; picking one closes the sheet.
-function DayAddRoutine({ day, close }) {
+// ＋ Add routine on a populated weekday or a date: single-pick, appends to that list. A routine
+// already there is disabled; picking one closes the sheet.
+function AddRoutineList({ on, add }) {
   const st = useStore(s => s.S)
-  const on = new Set([].concat(st.week[day] || []))
-  const add = id => { update(s => { s.week[day] = [...[].concat(s.week[day] || []), id] }); close() }
   return <>
     <h3>{t('Add routine')}</h3>
     <div className="list">
       {st.routines.map(r => {
         const already = on.has(r.id)
+        const cat = categoryOf(st, r)
         return <div key={r.id} className={'item' + (already ? ' disabled' : '')} aria-disabled={already || undefined}
           {...tappable(already ? null : () => add(r.id))}>
           <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
-          <div className="grow"><div className="tt">{r.name}</div><div className="ss">{exCount(r.ex.length)}</div></div>
+          <div className="grow"><div className="tt">{r.name}</div>
+            <div className="ss">{cat && <><CatDot cat={cat} />{cat.name} · </>}{exCount(r.ex.length)}</div></div>
           {already ? <span className="tag">{t('already added')}</span> : <Icon name="chevronRight" className="chev" />}
         </div>
       })}
     </div>
   </>
 }
+function DayAddRoutine({ day, close }) {
+  const st = useStore(s => s.S)
+  const add = id => { update(s => { s.week[day] = [...[].concat(s.week[day] || []), id] }); close() }
+  return <AddRoutineList on={new Set([].concat(st.week[day] || []))} add={add} />
+}
 export const dayAddRoutineSheet = day => ui().openSheet(close => <DayAddRoutine day={day} close={close} />)
+
+// The same picker for one date of the dated week (plan.js: the first edit copies the default in).
+function DateAddRoutine({ iso, close }) {
+  const st = useStore(s => s.S)
+  const add = id => { update(s => addToDate(s, iso, id)); close() }
+  return <AddRoutineList on={new Set(effectiveRoutineIds(st, iso))} add={add} />
+}
+export const dateAddRoutineSheet = iso => ui().openSheet(close => <DateAddRoutine iso={iso} close={close} />)
+
+/* ============================ categories ============================ */
+function CategoryEdit({ cat, close }) {
+  const [name, setName] = useState(cat?.name || '')
+  const [color, setColor] = useState(cat?.color || 'pink')
+  const save = () => {
+    if (!name.trim()) return
+    update(s => { if (cat) editCategory(s, cat.id, { name, color }); else addCategory(s, name, color) })
+    close()
+  }
+  return <>
+    <h3>{cat ? t('Edit category') : t('New category')}</h3>
+    <input className="input" autoFocus value={name} placeholder={t('Name, e.g. Running')} maxLength={40}
+      onChange={e => setName(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') save() }} style={{ marginBottom: 14 }} />
+    <div className="swatches" style={{ marginBottom: 18 }}>
+      {CAT_COLORS.map(k => <button key={k} className={'swatch' + (color === k ? ' on' : '')} style={{ background: ACCENTS[k] }}
+        onClick={() => setColor(k)} aria-label={k} aria-pressed={color === k} />)}
+    </div>
+    <Button variant="primary" onClick={save} disabled={!name.trim()}>{t('Save')}</Button>
+    {cat && <><div style={{ height: 8 }} />
+      <Button variant="danger" onClick={() => { update(s => deleteCategory(s, cat.id)); close() }}>{t('Delete category')}</Button></>}
+  </>
+}
+export const categoryEditSheet = cat => ui().openSheet(close => <CategoryEdit cat={cat} close={close} />)
+
+function Categories() {
+  const st = useStore(s => s.S)
+  const cats = st.categories || []
+  const used = id => st.routines.filter(r => r.cat === id).length
+  const missing = SUGGESTED_CATS.filter(sc => !cats.some(c => c.name.toLowerCase() === t(sc.name).toLowerCase()))
+  return <>
+    <h3>{t('Categories')}</h3>
+    <div className="muted small" style={{ marginBottom: 12 }}>{t('Group your activities by kind. Each category has its own colour on the plan.')}</div>
+    {cats.length > 0 && <div className="list" style={{ marginBottom: 14 }}>
+      {cats.map(c => <div key={c.id} className="item" {...tappable(() => categoryEditSheet(c))}>
+        <span className="lrow-i" style={{ background: catColor(c) }} />
+        <div className="grow"><div className="tt">{c.name}</div><div className="ss">{routineCount(used(c.id))}</div></div>
+        <Icon name="chevronRight" className="chev" /></div>)}
+    </div>}
+    <Button variant="tinted" icon="plus" onClick={() => categoryEditSheet(null)}>{t('New category')}</Button>
+    {missing.length > 0 && <>
+      <div className="small dim" style={{ margin: '16px 2px 8px' }}>{t('Suggestions')}</div>
+      <div className="chips" style={{ flexWrap: 'wrap' }}>
+        {missing.map(sc => <button key={sc.name} className="chip nocap" onClick={() => update(s => { addCategory(s, t(sc.name), sc.color) })}>
+          <i className="cat-dot" style={{ background: ACCENTS[sc.color] }} aria-hidden="true" />{t(sc.name)}</button>)}
+      </div>
+    </>}
+  </>
+}
+export const categoriesSheet = () => ui().openSheet(() => <Categories />)
 
 /* ============================ workout detail ============================ */
 function WorkoutDetail({ w, close }) {
@@ -1759,13 +1824,13 @@ function Calendar({ start, close }) {
   for (let i = 0; i < startOffset; i++) cells.push(<div key={'e' + i} />)
   for (let d = 1; d <= daysIn; d++) {
     const iso = y + '-' + String(mo + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0')
-    const ws = byDay[iso], planned = effectiveRoutineIds(st, iso).length > 0, ovr = st.dayPlan[iso] !== undefined
+    const ws = byDay[iso], planned = effectiveRoutineIds(st, iso).length > 0, ovr = isRescheduled(st, iso)
     const dotCls = ws ? 'done' : ovr && planned ? 'ovr' : planned ? 'plan' : ''
     cells.push(<button key={d} className={'cal-d' + (ws ? ' has' : '') + (iso === todayISO() ? ' today' : '')} onClick={() => {
       if (!ws) { close(); dayOverrideSheet(iso); return }
       if (ws.length === 1) { close(); workoutDetailSheet(ws[0]); return }
       close(); ui().openSheet(c2 => <><h3>{fmtDate(iso, true)}</h3><div className="list">{ws.map(w => <WorkoutRow key={w.id} w={w} onClick={() => { c2(); workoutDetailSheet(w) }} />)}</div></>)
-    }}><span>{d}</span><i className={dotCls} /></button>)
+    }}><span>{d}</span><i className={dotCls} style={dotCls === 'plan' && dateColor(st, iso) ? { background: dateColor(st, iso) } : null} /></button>)
   }
   return <>
     <div className="row between" style={{ marginBottom: 2 }}>

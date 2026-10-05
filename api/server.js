@@ -274,6 +274,8 @@ const deviceIdOf = v => (typeof v === 'string' && /^[A-Za-z0-9_-]{8,64}$/.test(v
 function effectiveRoutineId(S, iso) {
   const ov = S.dayPlan?.[iso];
   if (ov === 'rest') return null;
+  // A date can hold its own activity list (frontend/src/lib/plan.js); the reminder only needs the first.
+  if (Array.isArray(ov)) return ov.find(id => S.routines?.some(r => r?.id === id)) || null;
   if (ov && S.routines?.some(r => r?.id === ov)) return ov;
   const wd = new Date(iso + 'T12:00:00').getDay();
   return [].concat(S.week?.[wd] || []).find(id => S.routines?.some(r => r?.id === id)) || null;

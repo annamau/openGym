@@ -312,12 +312,13 @@ export function bestWeightFor(S, exId) {
  * are thin wrappers. `[]` — a stray empty array, or a key that is absent — all mean rest, so
  * "is this a rest day?" is `effectiveRoutineIds(S, iso).length === 0`.
  *
- * `S.dayPlan[iso]` stays scalar (a routine id, the `'rest'` sentinel, or undefined): the
- * per-date override and Start-time are single-pick. All array-tolerance is on `S.week`.
+ * `S.dayPlan[iso]` is a routine-id list (the date's own activities, see plan.js), a single
+ * routine id (the older per-date reschedule), the `'rest'` sentinel, or undefined (default week).
  */
 export function effectiveRoutineIds(S, iso) {
-  const ov = S.dayPlan[iso]
+  const ov = S.dayPlan?.[iso]
   if (ov === 'rest') return []
+  if (Array.isArray(ov)) return ov.filter(id => S.routines.some(r => r.id === id))
   if (ov && S.routines.some(r => r.id === ov)) return [ov]
   const wd = new Date(iso + 'T12:00:00').getDay()
   return [].concat(S.week[wd] || []).filter(id => S.routines.some(r => r.id === id))

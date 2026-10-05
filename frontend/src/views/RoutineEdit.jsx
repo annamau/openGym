@@ -8,12 +8,14 @@ import { uid } from '../lib/format.js'
 import { t, exerciseNameFor } from '../lib/i18n.js'
 import { supersetUnits, moveSupersetUnit, cleanupSg, exLine, defaultConfig } from '../lib/history.js'
 import { Thumb } from '../components/Media.jsx'
-import { glyphPicker, exercisePicker, exConfigSheet, confirmSheet } from '../sheets.jsx'
+import { glyphPicker, exercisePicker, exConfigSheet, confirmSheet, categoriesSheet } from '../sheets.jsx'
+import CatDot from '../components/CatDot.jsx'
 import Icon from '../components/Icon.jsx'
 import { glyphOf } from '../lib/glyphs.js'
 import { Button, Row, SelectRow, Switch } from '../components/ui.jsx'
 import SwipeToDelete from '../components/SwipeToDelete.jsx'
 import { copyRoutine } from '../lib/routines.js'
+import { dropRoutineFromDates, setRoutineCategory } from '../lib/plan.js'
 import { POLICIES_FOR, POLICY_NAME, POLICY_DESC } from '../lib/progression.js'
 import BodyMap from '../components/BodyMap.jsx'
 import { loadOfRoutine, rankOf, MUSCLE_NAME } from '../lib/muscles.js'
@@ -355,6 +357,14 @@ export default function RoutineEdit() {
       <button className="iconbtn" aria-label={t('Pick an icon')} onClick={() => glyphPicker(r.emoji, g => update(s => { s.routines.find(x => x.id === id).emoji = g }))}><Icon name={glyphOf(r.emoji)} /></button>
     </div>
 
+    {/* Category: the colour this routine wears on the Plan (lib/plan.js). */}
+    <div className="cat-chips" style={{ marginBottom: 16 }} role="group" aria-label={t('Category')}>
+      <button className={'chip' + (!r.cat ? ' on' : '')} onClick={() => update(s => setRoutineCategory(s, id, null))}>{t('No category')}</button>
+      {(S.categories || []).map(c => <button key={c.id} className={'chip nocap' + (r.cat === c.id ? ' on' : '')} aria-pressed={r.cat === c.id}
+        onClick={() => update(s => setRoutineCategory(s, id, c.id))}><CatDot cat={c} />{c.name}</button>)}
+      <button className="chip" onClick={() => categoriesSheet()}><Icon name="plus" />{(S.categories || []).length ? t('Manage') : t('Add category')}</button>
+    </div>
+
     <div className="sect-b" style={{ marginBottom: 16 }}>
       <SelectRow icon="chartLine" title={t('Progression')} sheetTitle={t('Progression')}
         value={r.prog || 'linear'} onChange={v => update(s => { s.routines.find(x => x.id === id).prog = v })}
@@ -451,12 +461,12 @@ export default function RoutineEdit() {
         update(s => {
           s.routines = s.routines.filter(x => x.id !== id)
           // A weekday holds a routine-id list: pull the deleted id from each day, drop the
-          // key when it empties (never store []). dayPlan stays scalar.
+          // key when it empties (never store []). Dated lists and reschedules: plan.js.
           Object.keys(s.week).forEach(k => {
             const next = [].concat(s.week[k]).filter(rid => rid !== id)
             if (next.length) s.week[k] = next; else delete s.week[k]
           })
-          Object.keys(s.dayPlan).forEach(k => { if (s.dayPlan[k] === id) delete s.dayPlan[k] })
+          dropRoutineFromDates(s, id)
         })
         nav('/plan')
       }

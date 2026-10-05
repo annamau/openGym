@@ -16,6 +16,7 @@ import { EXIDX } from './exercises.js'
 import { modeOf, isBw, isPerSide, cleanupSg } from './history.js'
 import { uid, todayISO, DAYN } from './format.js'
 import { mergePlan } from './plan-share.js'
+import { dropRoutineFromDates } from './plan.js'
 import { POLICIES } from './progression.js'
 import { t } from './i18n.js'
 
@@ -509,11 +510,8 @@ const CHANGE_APPLY = {
     Object.keys(s.week || {}).forEach(d => { if (s.week[d] === id) delete s.week[d] })
     // RoutineEdit does the same on a hand-deleted routine. A pointer left behind here is not
     // merely inert: the day still counts as overridden, so it wears a "rescheduled" badge for good.
-    const dropped = {}
-    Object.keys(s.dayPlan || {}).forEach(iso => {
-      if (s.dayPlan[iso] === id) { dropped[iso] = id; delete s.dayPlan[iso] }
-    })
-    recordDayPlanDrops(s, dropped)
+    // A dated activity list loses the id instead (and turns to rest if that empties it).
+    recordDayPlanDrops(s, dropRoutineFromDates(s, id))
   },
   'rename-routine': (s, c) => { need(findRoutine(s, c.target.routineId)).name = c.after },
   week: (s, c) => {
