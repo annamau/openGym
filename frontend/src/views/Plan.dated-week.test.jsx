@@ -29,10 +29,10 @@ vi.mock('../store/useStore.js', () => {
 })
 vi.mock('react-router-dom', () => ({ useNavigate: () => () => {} }))
 vi.mock('../lib/mobile.js', () => ({ MOBILE: false, isAndroid: () => Promise.resolve(false), shareExport: vi.fn(), syncReminder: vi.fn() }))
-const sheets = vi.hoisted(() => ({ dateAddRoutineSheet: vi.fn() }))
+const sheets = vi.hoisted(() => ({ dateAddRoutineSheet: vi.fn(), routineDetailSheet: vi.fn(), workoutDetailSheet: vi.fn() }))
 vi.mock('../sheets.jsx', () => ({
   starterPlanSheet: vi.fn(), dayAssignSheet: vi.fn(), dayAddRoutineSheet: vi.fn(), planToolsSheet: vi.fn(),
-  calendarSheet: vi.fn(), categoriesSheet: vi.fn(), dateAddRoutineSheet: sheets.dateAddRoutineSheet,
+  calendarSheet: vi.fn(), categoriesSheet: vi.fn(), ...sheets,
 }))
 
 let host, root
@@ -102,10 +102,28 @@ describe('Plan — dated week', () => {
     expect(host.querySelector('.plan-wklabel').textContent).not.toBe('This week')
   })
 
-  it('＋ Add routine opens the picker for that date', () => {
+  it('the ＋ in the day row opens the picker for that date, on a rest day too', () => {
     mount()
-    const add = [...dated()[3].querySelectorAll('button')].find(b => b.textContent.includes('Add routine'))
-    click(add)
+    expect(host.querySelector('.plan-dates').textContent).not.toContain('Add routine')
+    click(dated()[3].querySelector('[aria-label="Add routine"]'))
     expect(sheets.dateAddRoutineSheet).toHaveBeenCalledWith('2026-10-08')
+    click(dated()[1].querySelector('[aria-label="Add routine"]'))
+    expect(sheets.dateAddRoutineSheet).toHaveBeenCalledWith('2026-10-06')
+  })
+
+  it('tapping an activity shows its details; ✕ does not', () => {
+    mount()
+    click(dated()[3].querySelectorAll('.plan-act')[1])
+    expect(sheets.routineDetailSheet).toHaveBeenCalledWith('hy', '2026-10-08')
+    sheets.routineDetailSheet.mockClear()
+    click(dated()[3].querySelector('.plan-act button'))
+    expect(sheets.routineDetailSheet).not.toHaveBeenCalled()
+  })
+
+  it('a logged workout opens its details from the ✓ tag', () => {
+    mocks.S.workouts = [{ id: 'w1', d: '2026-10-05', name: 'Upper body', start: 1, end: 2, entries: [] }]
+    mount()
+    click(dated()[0].querySelector('.plan-done'))
+    expect(sheets.workoutDetailSheet).toHaveBeenCalledWith(mocks.S.workouts[0])
   })
 })

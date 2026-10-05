@@ -2109,3 +2109,6 @@ body.chips-dragging *{cursor:inherit}
 .plan-legend span{display:inline-flex;align-items:center}
 .cat-chips{display:flex;flex-wrap:wrap;gap:8px}
 .cat-chips .chip{display:inline-flex;align-items:center}
+.plan-done{border:0;font:inherit;font-size:inherit;cursor:pointer;max-width:60vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.plan-act{cursor:pointer;border-radius:8px}
+.plan-act:active{background:var(--surface-2)}

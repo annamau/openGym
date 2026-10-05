@@ -4,7 +4,7 @@ import { useUI } from './store/useUI.js'
 import { EXDB, EXIDX, BODYPARTS, isCardio, isBodyweightEq, allExercises, equipmentOf, smOf, searchExercises, exOr, isAssisted, betterWeight, beatsWeight } from './lib/exercises.js'
 import { activeProfile, exAvailable, ALL_EQUIPMENT, newProfile } from './lib/equipment.js'
 import { fmtDate, fmtNum, capWords, fmtVol, fmtDur, durPart, todayISO, isoOf, uid, exCount, routineCount, DAYN, DAYS, weekOrder, weekStartOf, weekDayOffset, MONTHS_LONG, ACCENTS } from './lib/format.js'
-import { lastEntryFor, bestWeightFor, bestWeightForEntry, buildSets, effectiveRoutineIds, workoutVolume, setsDone, setsDoneActive, setUnitsTotal, lastBW, supersetUnits, unitOf, setLabel, defaultConfig, cleanupSg, modeOf, effortOf, EFFORT, capEffort, stepEffort, isBw, isPerSide, sideReps, workSetsDone, applyIntensifierPlan, MAX_PLANNED_WARMUPS, NOTE_MAX } from './lib/history.js'
+import { exLine, lastEntryFor, bestWeightFor, bestWeightForEntry, buildSets, effectiveRoutineIds, workoutVolume, setsDone, setsDoneActive, setUnitsTotal, lastBW, supersetUnits, unitOf, setLabel, defaultConfig, cleanupSg, modeOf, effortOf, EFFORT, capEffort, stepEffort, isBw, isPerSide, sideReps, workSetsDone, applyIntensifierPlan, MAX_PLANNED_WARMUPS, NOTE_MAX } from './lib/history.js'
 import { usesBar, barWeightFor, defaultBarWeight, hasBarOverride, isNoBar } from './lib/bar.js'
 import { toScale, rirOf, EFFORT_PRESETS, effortColor } from './lib/effort.js'
 import { beep, vibrate } from './lib/sound.js'
@@ -1676,6 +1676,33 @@ function DateAddRoutine({ iso, close }) {
   return <AddRoutineList on={new Set(effectiveRoutineIds(st, iso))} add={add} />
 }
 export const dateAddRoutineSheet = iso => ui().openSheet(close => <DateAddRoutine iso={iso} close={close} />)
+
+/* ============================ routine details (Plan) ============================ */
+// What a planned activity trains, read-only: tapped from the Plan screen. Editing stays one
+// tap away; Start is offered on today's date only, like the Home row.
+function RoutineDetail({ id, iso, close }) {
+  const st = useStore(s => s.S)
+  const r = st.routines.find(x => x.id === id)
+  if (!r) return <div className="muted">{t('This routine no longer exists.')}</div>
+  const cat = categoryOf(st, r)
+  return <>
+    <div className="row" style={{ gap: 10, marginBottom: 4 }}>
+      <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
+      <h3 style={{ margin: 0 }}>{r.name}</h3>
+    </div>
+    <div className="small muted" style={{ marginBottom: 12 }}>
+      {cat && <><CatDot cat={cat} />{cat.name} · </>}{exCount(r.ex.length)}{iso && <> · {fmtDate(iso, true)}</>}
+    </div>
+    {r.ex.length ? <div className="list" style={{ marginBottom: 14 }}>
+      {r.ex.map((e, i) => <div key={i} className="item">
+        <div className="grow"><div className="tt capitalize">{exerciseNameFor(exOr(e.id))}</div><div className="ss">{exLine(e, st.unit)}</div></div>
+      </div>)}
+    </div> : <div className="muted small" style={{ marginBottom: 14 }}>{t('No exercises yet.')}</div>}
+    {iso === todayISO() && !st.active && <><Button variant="primary" icon="play" onClick={() => { close(); startFlow([r.id]) }}>{t('Start')}</Button><div style={{ height: 8 }} /></>}
+    <Button onClick={() => { close(); nav('/plan/r/' + r.id) }}>{t('Edit routine')}</Button>
+  </>
+}
+export const routineDetailSheet = (id, iso) => ui().openSheet(close => <RoutineDetail id={id} iso={iso} close={close} />)
 
 /* ============================ categories ============================ */
 function CategoryEdit({ cat, close }) {
