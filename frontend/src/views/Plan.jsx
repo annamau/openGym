@@ -1,14 +1,13 @@
 import { useNavigate } from 'react-router-dom'
 import { useStore } from '../store/useStore.js'
 import { useState } from 'react'
-import { DAYN, weekOrder, weekStartOf, startOfWeek, isoOf, todayISO, uid, exCount, routineCount } from '../lib/format.js'
+import { weekStartOf, startOfWeek, isoOf, todayISO, uid, exCount, routineCount } from '../lib/format.js'
 import { t, dateLocale } from '../lib/i18n.js'
-import { dayAddRoutineSheet, dateAddRoutineSheet, starterPlanSheet, planToolsSheet, calendarSheet, categoriesSheet, routineDetailSheet, workoutDetailSheet } from '../sheets.jsx'
+import { planToolsSheet, calendarSheet, categoriesSheet, routineDetailSheet, workoutDetailSheet } from '../sheets.jsx'
 import CatDot from '../components/CatDot.jsx'
 import { effectiveRoutines } from '../lib/history.js'
-import { removeFromDate, categoryOf, catColor } from '../lib/plan.js'
+import { addToDate, removeFromDate, categoryOf, catColor } from '../lib/plan.js'
 import Icon from '../components/Icon.jsx'
-import { Button } from '../components/ui.jsx'
 import { tappable } from '../lib/use-sheet-keyboard.js'
 import { glyphOf, DEFAULT_GLYPH } from '../lib/glyphs.js'
 import { DEMO } from '../lib/demo.js'
@@ -29,26 +28,13 @@ export default function Plan() {
      an instance without the feature sees exactly the Plan screen it saw before. */
   const showCoach = coachAvailable(config, user, { demo: DEMO, mobile: MOBILE, coachMode })
 
-  // Swap with the neighbour, the way the routine editor moves an exercise. `S.routines` is the
-  // one order the whole app reads, so this is all there is to it (#142).
-  const moveRoutine = (i, delta) => update(s => {
-    const to = i + delta
-    if (to < 0 || to >= s.routines.length) return
-    const [moved] = s.routines.splice(i, 1)
-    s.routines.splice(to, 0, moved)
-  })
-
-  const addRoutine = () => {
-    const r = { id: uid(), name: t('New routine'), emoji: DEFAULT_GLYPH, ex: [] }
-    update(s => { s.routines.push(r) })
+  // ＋ on a date: a new activity for that date only, opened in the editor. Activities are not
+  // kept as a reusable library — one that leaves its last date is deleted (lib/plan.js).
+  const newActivity = iso => {
+    const r = { id: uid(), name: t('New activity'), emoji: DEFAULT_GLYPH, ex: [] }
+    update(s => { s.routines.push(r); addToDate(s, iso, r.id) })
     nav('/plan/r/' + r.id)
   }
-
-  // Pull one routine off a weekday; drop the key when the day empties (never store []).
-  const removeFromDay = (d, rid) => update(s => {
-    const next = [].concat(s.week[d] || []).filter(id => id !== rid)
-    if (next.length) s.week[d] = next; else delete s.week[d]
-  })
 
   // The dated week: real dates, each with its own activity list (lib/plan.js). Starts on the
   // current week and follows the week-start setting, like Home's strip.
@@ -72,7 +58,7 @@ export default function Plan() {
       {...tappable(() => routineDetailSheet(r.id, iso))}>
       <span className="lrow-i" style={{ width: 26, height: 26, fontSize: 14 }}><Icon name={glyphOf(r.emoji)} /></span>
       <div className="grow" style={{ minWidth: 0 }}><div className="tt" style={{ fontSize: 14 }}>{r.name}</div>
-        <div className="ss">{cat && <>{cat.name} · </>}{exCount(r.ex.length)}</div></div>
+        <div className="ss">{cat && <>{cat.name} · </>}{r.ex.length || !r.note ? exCount(r.ex.length) : r.note.split('\n')[0]}</div></div>
       <button className="iconbtn sm" aria-label={t('Remove')} onClick={ev => { ev.stopPropagation(); onRemove() }}><Icon name="xmark" /></button>
     </div>
   }
@@ -81,7 +67,7 @@ export default function Plan() {
     <div className="tt">{title}</div>
     <div className="row" style={{ gap: 6, minWidth: 0 }}>
       {status}
-      <button className="iconbtn sm" aria-label={t('Add routine')} title={t('Add routine')} onClick={onAdd}><Icon name="plus" /></button>
+      <button className="iconbtn sm" aria-label={t('Add activity')} title={t('Add activity')} onClick={onAdd}><Icon name="plus" /></button>
     </div>
   </div>
 
@@ -117,7 +103,7 @@ export default function Plan() {
           ? <button className="tag acc plan-done" onClick={() => workoutDetailSheet(done[done.length - 1])}><Icon name="check" /> {done.map(w => w.name).join(' + ')}</button>
           : acts.length ? <div className="small dim">{routineCount(acts.length)}</div> : <span className="tag">{t('Rest')}</span>
         return <div key={iso} className={'item' + (iso === today ? ' plan-today' : '')} style={{ display: 'block', padding: '10px 14px' }}>
-          {dayHead(d.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric' }), status, () => dateAddRoutineSheet(iso), acts.length > 0)}
+          {dayHead(d.toLocaleDateString(dateLocale(), { weekday: 'long', day: 'numeric' }), status, () => newActivity(iso), acts.length > 0)}
           {acts.map(r => activity(r, () => update(s => removeFromDate(s, iso, r.id)), iso))}
         </div>
       })}
@@ -125,44 +111,5 @@ export default function Plan() {
     {cats.length > 0 && <div className="plan-legend">
       {cats.map(c => <span key={c.id}><CatDot cat={c} />{c.name}</span>)}
     </div>}
-
-    <div className="cols"><div>
-      <h4 className="sec">{t('Default week')}</h4>
-      <div className="small dim" style={{ margin: '-4px 2px 10px' }}>{t('Repeats every week. A date you edit above keeps its own activities.')}</div>
-      <div className="list plan-default" style={{ display: 'flex', flexDirection: 'column' }}>
-        {weekOrder(weekStartOf(S)).map(d => {
-          const dayRoutines = [].concat(S.week[d] || []).map(id => S.routines.find(x => x.id === id)).filter(Boolean)
-          return <div key={d} className="item" style={{ display: 'block', padding: '10px 14px' }}>
-            {dayHead(t(DAYN[d]), dayRoutines.length ? <div className="small dim">{routineCount(dayRoutines.length)}</div> : <span className="tag">{t('Rest')}</span>,
-              () => dayAddRoutineSheet(d), dayRoutines.length > 0)}
-            {dayRoutines.map(r => activity(r, () => removeFromDay(d, r.id)))}
-          </div>
-        })}
-      </div>
-    </div><div>
-      <div className="row between" style={{ marginTop: 22, marginBottom: 10 }}>
-        <h4 className="sec" style={{ margin: 0 }}>{t('Routines')}</h4>
-        <Button size="sm" variant="tinted" icon="plus" onClick={addRoutine}>{t('New')}</Button>
-      </div>
-      {S.routines.length ? <div className="list">{S.routines.map((r, i) => <div key={r.id} className="item" {...tappable(() => nav('/plan/r/' + r.id))}>
-        <span className="lrow-i"><Icon name={glyphOf(r.emoji)} /></span>
-        <div className="grow"><div className="tt">{r.name}</div>
-          <div className="ss">{categoryOf(S, r) && <><CatDot cat={categoryOf(S, r)} />{categoryOf(S, r).name} · </>}{exCount(r.ex.length)}</div></div>
-        {/* The order of this list is the order of `S.routines`, and every other screen reads the
-            same array — the Start screen, the day-assignment sheets, the routine pickers. So
-            moving a routine here moves it everywhere, which is what the request asked for (#142). */}
-        {S.routines.length > 1 && <div style={{ display: 'flex', gap: 2, flex: 'none' }}>
-          <button className="iconbtn" aria-label={t('Move up')} title={t('Move up')} disabled={i === 0}
-            style={{ width: 28, height: 24, borderRadius: 7, fontSize: 12 }}
-            onClick={ev => { ev.stopPropagation(); moveRoutine(i, -1) }}><Icon name="chevronUp" /></button>
-          <button className="iconbtn" aria-label={t('Move down')} title={t('Move down')} disabled={i === S.routines.length - 1}
-            style={{ width: 28, height: 24, borderRadius: 7, fontSize: 12 }}
-            onClick={ev => { ev.stopPropagation(); moveRoutine(i, 1) }}><Icon name="chevronDown" /></button>
-        </div>}
-        <Icon name="chevronRight" className="chev" /></div>)}</div> : <>
-        <div className="empty"><div className="ico"><Icon name="clipboard" /></div>{t('No routines yet.')}<br />{t('Create one or load the starter plan.')}</div>
-        <Button icon="sparkles" onClick={starterPlanSheet}>{t('Load starter plan')}</Button>
-      </>}
-    </div></div>
   </>
 }

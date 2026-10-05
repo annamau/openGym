@@ -8,7 +8,6 @@ import { createRoot } from 'react-dom/client'
 import { useStore } from '../store/useStore.js'
 import { starterPlanSheet } from '../sheets.jsx'
 import Home from './Home.jsx'
-import Plan from './Plan.jsx'
 
 vi.mock('react-router-dom', () => ({ useNavigate: () => () => {} }))
 vi.mock('../sheets.jsx', () => ({
@@ -33,7 +32,7 @@ afterEach(() => {
 
 const starterButton = () => [...host.querySelectorAll('button')].find(b => b.textContent === 'Load starter plan')
 
-describe.each([['Home', Home], ['Plan', Plan]])('%s empty state', (_name, View) => {
+describe.each([['Home', Home]])('%s empty state', (_name, View) => {
   it('opens the starter plan chooser instead of loading one plan blind', () => {
     act(() => root.render(<View />))
     const button = starterButton()

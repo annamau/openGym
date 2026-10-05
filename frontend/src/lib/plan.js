@@ -42,6 +42,26 @@ export function addToDate(s, iso, routineId) {
 /** Pull one routine off a date; the date keeps everything else it showed. */
 export function removeFromDate(s, iso, routineId) {
   setDate(s, iso, effectiveRoutineIds(s, iso).filter(id => id !== routineId))
+  pruneRoutine(s, routineId)
+}
+
+/** Is a routine planned anywhere: a date (list or reschedule), the default week, or the running workout? */
+export function isRoutineInUse(s, routineId) {
+  const inDates = Object.values(s.dayPlan || {}).some(v => (Array.isArray(v) ? v.includes(routineId) : v === routineId))
+  const inWeek = Object.values(s.week || {}).some(v => [].concat(v || []).includes(routineId))
+  const inActive = [].concat(s.active?.routineIds || []).includes(routineId)
+  return inDates || inWeek || inActive
+}
+
+/**
+ * Activities are one-offs, not a library: once a routine is on no date, not in the default week
+ * and not being trained right now, it is deleted. Logged workouts keep their own copy of what was
+ * done, so history is untouched.
+ */
+export function pruneRoutine(s, routineId) {
+  if (isRoutineInUse(s, routineId)) return false
+  s.routines = s.routines.filter(r => r.id !== routineId)
+  return true
 }
 
 /**

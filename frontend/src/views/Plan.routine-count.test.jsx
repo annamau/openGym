@@ -48,13 +48,16 @@ afterEach(() => {
 })
 
 const mount = () => act(() => root.render(<Plan />))
-const countOn = day => [...host.querySelectorAll('.item')].find(el => el.querySelector('.tt')?.textContent === day)?.querySelector('.small.dim')?.textContent
+const countOn = iso => host.querySelectorAll('.plan-dates > .item')[(new Date(iso + 'T12:00:00').getDay() + 6) % 7]?.querySelector('.small.dim')?.textContent
 
 describe('Plan — the day header counts its routines', () => {
   it('uses the singular for one routine and the plural for more', () => {
-    mocks.S.week = { 1: ['r1'], 2: ['r1', 'r2'] }
+    vi.useFakeTimers({ toFake: ['Date'] })
+    vi.setSystemTime(new Date('2026-10-07T10:00:00'))
+    mocks.S.dayPlan = { '2026-10-05': ['r1'], '2026-10-06': ['r1', 'r2'] }
     mount()
-    expect(countOn('Monday')).toBe('1 routine')
-    expect(countOn('Tuesday')).toBe('2 routines')
+    expect(countOn('2026-10-05')).toBe('1 routine')
+    expect(countOn('2026-10-06')).toBe('2 routines')
+    vi.useRealTimers()
   })
 })
