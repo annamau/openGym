@@ -102,13 +102,31 @@ describe('Plan — dated week', () => {
     expect(host.querySelector('.plan-wklabel').textContent).not.toBe('This week')
   })
 
-  it('the ＋ in the day row opens the picker for that date, on a rest day too', () => {
+  it('the ＋ in the day row creates a new activity on that date only, rest day too', () => {
     mount()
     expect(host.querySelector('.plan-dates').textContent).not.toContain('Add routine')
-    click(dated()[3].querySelector('[aria-label="Add routine"]'))
-    expect(sheets.dateAddRoutineSheet).toHaveBeenCalledWith('2026-10-08')
-    click(dated()[1].querySelector('[aria-label="Add routine"]'))
-    expect(sheets.dateAddRoutineSheet).toHaveBeenCalledWith('2026-10-06')
+    click(dated()[1].querySelector('[aria-label="Add activity"]'))
+    const created = mocks.S.routines.at(-1)
+    expect(created.name).toBe('New activity')
+    expect(mocks.S.dayPlan['2026-10-06']).toEqual([created.id])
+    expect(mocks.S.week[2]).toBeUndefined()
+  })
+
+  it('no default-week or routine-library sections', () => {
+    mount()
+    expect(host.textContent).not.toContain('Default week')
+    expect(host.querySelector('.plan-default')).toBeNull()
+    expect(host.textContent).not.toMatch(/\bRoutines\b/)
+  })
+
+  it('✕ on an activity that is on no other date deletes it; one still planned elsewhere stays', () => {
+    mocks.S.dayPlan['2026-10-15'] = ['hy']
+    mount()
+    const acts = dated()[3].querySelectorAll('.plan-act')                // Thu 8: Easy run, Hyrox
+    click(acts[0].querySelector('button'))
+    expect(mocks.S.routines.some(r => r.id === 'run')).toBe(false)
+    click(dated()[3].querySelector('.plan-act button'))
+    expect(mocks.S.routines.some(r => r.id === 'hy')).toBe(true)        // still on the 15th
   })
 
   it('tapping an activity shows its details; ✕ does not', () => {

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { effectiveRoutineIds } from './history.js'
 import { mergeStates } from './sync-merge.js'
 import {
-  addToDate, removeFromDate, dropRoutineFromDates, hasDatedList, isRescheduled,
+  addToDate, removeFromDate, dropRoutineFromDates, hasDatedList, isRescheduled, pruneRoutine, isRoutineInUse,
   addCategory, editCategory, deleteCategory, setRoutineCategory, categoryOf, catColor, dateColor,
 } from './plan.js'
 import { ACCENTS } from './format.js'
@@ -127,5 +127,25 @@ describe('categories', () => {
     const a = { ...state(), _ts: 2, workouts: [], bodyweight: [], categories: [{ id: 'x', name: 'Class', color: 'ocean' }] }
     const b = { ...state(), _ts: 1, workouts: [], bodyweight: [], categories: [{ id: 'x', name: 'Old', color: 'pink' }, { id: 'y', name: 'Run', color: 'sage' }] }
     expect(mergeStates(a, b).categories).toEqual([{ id: 'x', name: 'Class', color: 'ocean' }, { id: 'y', name: 'Run', color: 'sage' }])
+  })
+})
+
+describe('activities are one-offs', () => {
+  it('removing an activity from its only date deletes the routine', () => {
+    const S = state(); S.week = {}
+    S.dayPlan[WED] = ['run']
+    removeFromDate(S, WED, 'run')
+    expect(S.routines.some(r => r.id === 'run')).toBe(false)
+    expect(S.dayPlan[WED]).toBe('rest')
+  })
+  it('a routine still on another date, in the default week, or being trained is kept', () => {
+    const S = state()
+    S.dayPlan = { [WED]: ['cf', 'run'], [NEXT_WED]: ['run'] }
+    removeFromDate(S, WED, 'run')
+    expect(S.routines.some(r => r.id === 'run')).toBe(true)
+    expect(isRoutineInUse(S, 'cf')).toBe(true)                 // default week (Wednesday)
+    S.week = {}; S.dayPlan = {}; S.active = { routineIds: ['hy'] }
+    expect(pruneRoutine(S, 'hy')).toBe(false)
+    expect(pruneRoutine(S, 'cf')).toBe(true)
   })
 })
